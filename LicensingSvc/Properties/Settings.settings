@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Licensing.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="RsaKey" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;RSAKeyValue&gt;&lt;Modulus&gt;m3LXSaTvDCh3Zd5KkhRozpgjEXVy1K8xByECwQYebU+Yk4LJAqs4qEIQ0lp2bp1rZ5lbrsvr5WOSjod/1RzMKagT2CtiaqsmSgwbvBSKpMi2SYjdeZrYNnwFKdQOro+3K46KfBxliR2LcBV9kl24LfoFeeSKzI3UtB5yf80kLSE=&lt;/Modulus&gt;&lt;Exponent&gt;AQAB&lt;/Exponent&gt;&lt;P&gt;wBvJi7K4bRN2+YFa+OPENoQhBrNPVtUP+RzmxZEAKI8OA+2TAq+olu/9uOK0kwtDL/EDqcVZFzmsF+e7kjUJqw==&lt;/P&gt;&lt;Q&gt;zyXO9B9m5QWDhMYCnQ3isRkxnHcq+fZzFHnxgjZX5MaXBHRdfGHSk6teFd5i2WdHowSmPJbxdecNh5PrCtRQYw==&lt;/Q&gt;&lt;DP&gt;uUISuoU/FPEQaswzzpDXRztkHfINMM+G99THNv7+CB7shR02CAEds3D8XK9DNApIYJMr1SxbHeqf6u2uFPDQwQ==&lt;/DP&gt;&lt;DQ&gt;UD4aJBEB/9eZ8dXubz5QwT+8Kxsyh6/DNnxiZIl+lL2lBHG7QRJ3ywJIKPqDmina4zhK2Q+zq3N8lzdihkhmdw==&lt;/DQ&gt;&lt;InverseQ&gt;NDJt03PQIOcSZey+74DQIOV1mvQ5X5XIZ+RY9OzikiiBiRcaAYbX7DNu9S++vthGx40M+ClwPNiMwWB8xpdPfQ==&lt;/InverseQ&gt;&lt;D&gt;K7lXuQ09eAwB2ZN3IjO/byz34DdK/2vvvHOalLSl5lVXM1a8N5X1r841cRWk7mQ1C8TlNvuA9NrXJGQUntskybqBmQsm4SrBRbk9HP87BV5FaV0exhQMEoRjX2i3wCuYRwCBcxPjyrCkuu9SoLowvj2EgxqZ9lNATJtdz6VqRik=&lt;/D&gt;&lt;/RSAKeyValue&gt;</Value>
+    </Setting>
+    <Setting Name="ConnectionString" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Data Source=|DataDirectory|\licensing.db</Value>
+    </Setting>
+    <Setting Name="Password" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">DLOCR@2018</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

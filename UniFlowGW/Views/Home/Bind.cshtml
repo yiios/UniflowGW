@@ -1,0 +1,35 @@
+﻿@model UserViewModel
+
+@{
+	ViewData["Title"] = "Bind";
+}
+
+<h2>绑定帐号</h2>
+
+<form action="/bind" method="post" class="form-horizontal">
+	<input id="openId" type="hidden" value="@Model?.openId" name="openId">
+	<div class="form-group">
+		<label for="Document" class="col-xs-3 col-sm-2 control-label">用户名 </label>
+		<div class="col-xs-9 col-sm-10">
+			<input id="userName" type="text" value="" name="userName" class="form-control" placeholder="输入用户名（姓名全）">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="password" class="col-xs-3 col-sm-2 control-label">密码: </label>
+
+		<div class="col-xs-9 col-sm-10">
+			<input id="password" type="password" value="" name="password" class="form-control" placeholder="Input user password">
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-xs-3 col-sm-2"></label>
+		<div class="col-xs-9 col-sm-10" style="color:red">@Html.ValidationMessage("errorMsg")</div>
+	</div>
+	<div class="form-group">
+		<label class="col-xs-3 col-sm-2"></label>
+		<div class="col-xs-9 col-sm-10">
+			<button type="submit" class="btn btn-danger">绑定</button>
+		</div>
+	</div>
+</form>
+

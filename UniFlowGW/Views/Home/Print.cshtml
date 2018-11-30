@@ -1,0 +1,140 @@
+﻿@model PrintViewModel
+@{
+    ViewData["Title"] = "Print";
+}
+
+<h2>打印</h2>
+
+<form action="/Result" method="post" class="form-horizontal">
+    <input type="hidden" name="Path" value="@Model.Path" />
+    <input type="hidden" name="Document" value="@Model.Document" />
+    <input type="hidden" name="UserID" value="@Model.UserID" />
+
+    <div class="form-group">
+        <label class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.Document):</label>
+        <div class="input-group">
+            <p class="form-control-static">@Html.DisplayFor(m => m.Document)</p>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="Copies" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.Copies): </label>
+        <div class="input-group quantity-wrapper">
+
+            <span class="input-group-addon input-group-addon-remove quantity-remove btn">
+                <span class="glyphicon glyphicon-minus"></span>
+            </span>
+
+            <input id="Copies" type="text" value="@Model.Copies" name="@nameof(@Model.Copies)" class="form-control quantity-count" placeholder="1">
+
+            <span class="input-group-addon input-group-addon-remove quantity-add btn">
+                <span class="glyphicon glyphicon-plus"></span>
+            </span>
+
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="ColorMode" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.ColorMode): </label>
+        <div class="btn-group" data-toggle="buttons">
+            @foreach (ColorMode val in Enum.GetValues(typeof(ColorMode)))
+            {
+                var active = Model.ColorMode == val ? "active" : "";
+                var checked_ = Model.ColorMode == val ? "checked" : "";
+                <label class="btn btn-danger @active">
+                    <input type="radio" name="@nameof(Model.ColorMode)" id="ColorMode" autocomplete="off" @checked_ value="@val">
+                    @val.GetDisplayName()
+                </label>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="ColorMode" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.PaperSize): </label>
+        <div class="btn-group" data-toggle="buttons">
+            @foreach (PaperSize val in Enum.GetValues(typeof(PaperSize)))
+            {
+                var active = Model.PaperSize == val ? "active" : "";
+                var checked_ = Model.PaperSize == val ? "checked" : "";
+                <label class="btn btn-danger @active">
+                    <input type="radio" name="@nameof(Model.PaperSize)" id="PaperSize" autocomplete="off" @checked_ value="@val">
+                    @val.GetDisplayName()
+                </label>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="Orientation" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.Orientation): </label>
+        <div class="btn-group" data-toggle="buttons">
+            @foreach (Orientation val in Enum.GetValues(typeof(Orientation)))
+            {
+                var active = Model.Orientation == val ? "active" : "";
+                var checked_ = Model.Orientation == val ? "checked" : "";
+                <label class="btn btn-danger @active">
+                    <input type="radio" name="@nameof(Model.Orientation)" id="Orientation" autocomplete="off" @checked_ value="@val">
+                    @val.GetDisplayName()
+                </label>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="PaperMode" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.PaperMode): </label>
+        <div class="btn-group" data-toggle="buttons">
+            @foreach (PaperMode val in Enum.GetValues(typeof(PaperMode)))
+            {
+                var active = Model.PaperMode == val ? "active" : "";
+                var checked_ = Model.PaperMode == val ? "checked" : "";
+                <label class="btn btn-danger @active">
+                    <input type="radio" name="@nameof(Model.PaperMode)" id="Orientation" autocomplete="off" @checked_ value="@val">
+                    @val.GetDisplayName()
+                </label>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-xs-3 col-sm-2"></label>
+        <div class="">
+            <button type="submit" class="btn btn-danger">提交</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            //Add
+            $(".quantity-add").click(function (e) {
+                var num = $(this).parent().find("input");
+                var count = num.val();
+                var newcount = parseInt(count) + 1;
+                num.val(newcount);
+            });
+
+            //Remove
+            $(".quantity-remove").click(function (e) {
+                var num = $(this).parent().find("input");
+                var count = num.val();
+                var newcount = parseInt(count) - 1;
+                num.val(newcount);
+            });
+
+
+            //Delete
+            $(".quantity-delete").click(function (e) {
+                //Vars
+                var count = 1;
+                var newcount = 0;
+
+                //Wert holen + Rechnen
+                var elemID = $(this).parent().attr("id");
+                var countField = $("#" + elemID + 'inp');
+                var count = $("#" + elemID + 'inp').val();
+                var newcount = parseInt(count) - 1;
+
+                //Neuen Wert setzen
+                //$('.item').html('');
+
+                var row = $(".row");
+                $(event.target).closest(row).html('');
+            });
+        })
+    </script>
+}

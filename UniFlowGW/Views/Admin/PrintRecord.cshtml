@@ -1,0 +1,162 @@
+﻿@model IEnumerable<UniFlowGW.Models.PrintTask>
+
+@{
+    ViewData["Title"] = "打印记录";
+}
+
+<h2>打印记录</h2>
+
+@*<p>
+        <a asp-action="Create">Create New</a>
+    </p>*@
+
+
+<form asp-method="get" class="form-inline">
+    <div class="form-actions">
+        <p>
+            查询用户 ID:
+            <div class="input-group">
+                <input type="search" class="form-control" name="q" value="@ViewBag.Query" />
+                <span class="input-group-btn">
+                    <button class="btn btn-info" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                </span>
+            </div>
+            <span class="pull-right">
+                | <a asp-action="PrintRecord">全部数据</a>
+            </span>
+        </p>
+    </div>
+</form>
+
+<table class="table table-striped table-hover table-condensed">
+    <thead>
+        <tr>
+            <th>
+                <a asp-action="PrintRecord"
+                   asp-route-s="@nameof(PrintTask.Time)"
+                   asp-route-d="@ViewBag.NextDirectionTime"
+                   asp-route-cq="@ViewBag.Query"
+                   asp-route-p="@ViewBag.PageIndex">
+                    @Html.DisplayNameFor(model => model.Time)
+                    @ViewBag.MarkTime
+                </a>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Document)
+            </th>
+            <th>
+                <a asp-action="PrintRecord"
+                   asp-route-s="@nameof(PrintTask.UserID)"
+                   asp-route-d="@ViewBag.NextDirectionUserID"
+                   asp-route-cq="@ViewBag.Query"
+                   asp-route-p="@ViewBag.PageIndex">
+                    @Html.DisplayNameFor(model => model.UserID)
+                    @ViewBag.MarkUserID
+                </a>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Detail)
+            </th>
+            <th>
+                <a asp-action="PrintRecord"
+                   asp-route-s="@nameof(PrintTask.Status)"
+                   asp-route-d="@ViewBag.NextDirectionStatus"
+                   asp-route-cq="@ViewBag.Query"
+                   asp-route-p="@ViewBag.PageIndex">
+                    @Html.DisplayNameFor(model => model.Status)
+                    @ViewBag.MarkStatus
+                </a>
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Message)
+            </th>
+            @*<th></th>*@
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Time)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Document)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserID)
+                </td>
+                <td>
+                    @{
+                        var detail = item.PrintModel;
+                    }
+
+                    @Html.DisplayNameFor(m => m.PrintModel.Copies): @detail.Copies |
+                    @Html.DisplayNameFor(m => m.PrintModel.ColorMode): @detail.ColorMode.GetDisplayName() |
+                    @Html.DisplayNameFor(m => m.PrintModel.PaperSize): @detail.PaperSize.GetDisplayName() |
+                    @Html.DisplayNameFor(m => m.PrintModel.Orientation): @detail.Orientation.GetDisplayName() |
+                    @Html.DisplayNameFor(m => m.PrintModel.PaperMode): @detail.PaperMode.GetDisplayName()
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Status)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Message)
+                </td>
+                @*<td>
+                        <a asp-action="Edit" asp-route-id="@item.PrintTaskId">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.PrintTaskId">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.PrintTaskId">Delete</a>
+                    </td>*@
+            </tr>
+        }
+    </tbody>
+</table>
+
+@{
+    var prevDisabled = !ViewBag.HasPrevPage ? "disabled" : "";
+    var nextDisabled = !ViewBag.HasNextPage ? "disabled" : "";
+}
+
+<div>
+    <span class="pull-right">
+        @if (!string.IsNullOrEmpty(ViewBag.Query))
+        {
+            <span>匹配: @ViewBag.Count |</span>
+        }
+        总记录: @ViewBag.Total
+    </span>
+    <a asp-action="PrintRecord"
+       asp-route-s="@ViewBag.Sort"
+       asp-route-d="@ViewBag.Direction"
+       asp-route-cq="@ViewBag.Query"
+       asp-route-p="1"
+       class="btn btn-default @prevDisabled">
+        首页
+    </a>
+    <a asp-action="PrintRecord"
+       asp-route-s="@ViewBag.Sort"
+       asp-route-d="@ViewBag.Direction"
+       asp-route-cq="@ViewBag.Query"
+       asp-route-p="@(ViewBag.PageIndex - 1)"
+       class="btn btn-default @prevDisabled">
+        上一页
+    </a>
+    @ViewBag.PageIndex / @ViewBag.PageCount
+    <a asp-action="PrintRecord"
+       asp-route-s="@ViewBag.Sort"
+       asp-route-d="@ViewBag.Direction"
+       asp-route-cq="@ViewBag.Query"
+       asp-route-p="@(ViewBag.PageIndex + 1)"
+       class="btn btn-default @nextDisabled">
+        下一页
+    </a>
+    <a asp-action="PrintRecord"
+       asp-route-s="@ViewBag.Sort"
+       asp-route-d="@ViewBag.Direction"
+       asp-route-cq="@ViewBag.Query"
+       asp-route-p="@(ViewBag.PageCount)"
+       class="btn btn-default @nextDisabled">
+        尾页
+    </a>
+</div>
