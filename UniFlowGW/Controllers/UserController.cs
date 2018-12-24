@@ -29,5 +29,24 @@ namespace UniFlowGW.Controllers
 			_logger = logger;
 		}
 
+		[Route("Test1")]
+		public IActionResult Test()
+		{
+			_logger.LogInformation("test");
+			var sn = "XTR03183";
+			var timestamp = Math.Floor((double)DateTime.Now.Ticks / 1000).ToString();
+			var nonce = "123456";
+			var secretNo = "101d7a8c8d6db9842a493b40642107a4";
+			var type = "register";
+			var paramArray = new List<string> { sn, secretNo, timestamp, nonce, type };
+			paramArray.Sort();
+
+			//var sign = sha1(paramsStr);
+
+
+
+			return View();
+		}
+
 	}
 }

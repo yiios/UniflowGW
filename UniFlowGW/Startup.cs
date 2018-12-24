@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UniFlowGW.Models;
 using Microsoft.EntityFrameworkCore;
 using UniFlowGW.Services;
+using Microsoft.Extensions.Logging;
 
 namespace UniFlowGW
 {
@@ -39,6 +40,9 @@ namespace UniFlowGW
             services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
             services.AddHostedService<QueuedHostedService>();
 
+			services.AddSingleton<Client>();
+			services.AddHostedService<WssHostedService>();
+
             services.AddDbContext<DatabaseContext>(options =>
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
@@ -55,8 +59,7 @@ namespace UniFlowGW
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
-            IServiceProvider serviceProvider)
+		public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -81,6 +84,10 @@ namespace UniFlowGW
 
             using (var ctx = serviceProvider.GetService<DatabaseContext>())
                 ctx.Database.Migrate();
+
+			loggerFactory.AddFile(Configuration.GetSection("Logging"));
+			//app.UseWebSockets();
+
         }
     }
 }

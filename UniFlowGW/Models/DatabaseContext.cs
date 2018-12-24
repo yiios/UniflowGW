@@ -55,21 +55,40 @@ namespace UniFlowGW.Models
 		public string PasswordHash { get; set; }
 	}
 
-	public class WeChatUser
+    public enum ExternAccountType {
+        WeChatOpenID,
+        WeChatWorkAccountID,
+        FaceID,
+        FingerID,
+    }
+	public class ExternBinding
 	{
 		public int Id { get; set; }
-		public string openId { get; set; }
-		public string userId { get; set; }
-		public DateTime bindDate { get; set; }
+		public string ExternalId { get; set; }
+        public ExternAccountType Type { get; set; }
+		public string BindUserId { get; set; }
+		public DateTime BindTime { get; set; }
 
+        public BindUser BindUser { get; set; }
 	}
+
+    public class BindUser
+    {
+        public string BindUserId { get; set; }
+        public string UserLogin { get; set; }
+        public DateTime BindTime { get; set; }
+
+        public List<ExternBinding> ExternBindings { get; set; }
+    }
+
 	public class DatabaseContext : DbContext
 	{
 		public DbSet<PrintTask> PrintTasks { get; set; }
 		public DbSet<Admin> Admins { get; set; }
-		public DbSet<WeChatUser> WeChatUsers { get; set; }
+        public DbSet<ExternBinding> ExternBindings { get; set; }
+        public DbSet<BindUser> BindUsers { get; set; }
 
-		public DatabaseContext(DbContextOptions<DatabaseContext> options)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options)
 			: base(options)
 		{ }
 
@@ -77,6 +96,14 @@ namespace UniFlowGW.Models
 		{
 			builder.Entity<PrintTask>().HasIndex(pt => pt.UserID);
 			builder.Entity<PrintTask>().HasIndex(pt => pt.Time);
-		}
-	}
+
+            builder.Entity<ExternBinding>().Property(b => b.ExternalId).IsRequired();
+            builder.Entity<ExternBinding>().Property(b => b.Type).IsRequired();
+            builder.Entity<ExternBinding>().Property(b => b.BindUserId).IsRequired();
+            builder.Entity<ExternBinding>().Property(b => b.BindTime).IsRequired();
+
+            builder.Entity<BindUser>().Property(b => b.UserLogin).IsRequired();
+            builder.Entity<BindUser>().Property(b => b.BindTime).IsRequired();
+        }
+    }
 }

@@ -12,7 +12,7 @@
 	<div class="form-group">
 		<label target="UserID" class="col-xs-3 col-sm-2 control-label">用户名: </label>
 		<div class="col-xs-9 col-sm-10">
-			<input type="text" value="@Model?.UserID" @(hasUserId ? "" : "readonly=\"readonly\"")
+			<input type="text" value="@Model?.UserID" readonly="readonly"
 				   id="UserID" name="UserID" class="form-control" placeholder="Input user">
 		</div>
 	</div>
