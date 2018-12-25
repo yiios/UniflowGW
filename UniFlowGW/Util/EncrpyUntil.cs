@@ -28,6 +28,11 @@ namespace UniFlowGW.Util
 
 		}
 
+        public static string Encrypt(string value, string key)
+        {
+            return Encrypt(value, key, CreateCryptographicallySecureGuid());
+        }
+
 		public static string Encrypt(string value, string key, string salt)
 		{
 			DeriveBytes deriveBytes = new Rfc2898DeriveBytes(key, Encoding.Unicode.GetBytes(salt));

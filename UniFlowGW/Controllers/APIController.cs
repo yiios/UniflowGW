@@ -41,9 +41,9 @@ namespace UniFlowGW.Controllers
 					.Append(code).Append("&grant_type=authorization_code");
 			var res = RequestUtil.HttpGet(url.ToString());
 			var thirdLoginRes = JsonHelper.DeserializeJsonToObject<WxThirdLoginResponseBody>(res);
-			if (thirdLoginRes.errcode == "0")
+			if (thirdLoginRes.Code == "0")
 			{
-				return new ThirdLoginResponseBody { errcode = "100" };
+				return new ThirdLoginResponseBody { Code = "100" };
 			}
 			string sessionId = Guid.NewGuid().ToString();
 			sessionIdOpenIdMap.Add(sessionId, thirdLoginRes.openid);
@@ -61,6 +61,7 @@ namespace UniFlowGW.Controllers
 		}
 
 
+
 		[Route("Unlock")]
 		public UnlockResponseBody Unlock(UnlockRequestBody unlockModel)
 		{
@@ -71,14 +72,14 @@ namespace UniFlowGW.Controllers
 			var sessionId = unlockModel.sessionId;
 			if (!sessionIdOpenIdMap.ContainsKey(sessionId))
 			{
-				return new UnlockResponseBody { printerName = param[1], errcode = "100" };
+				return new UnlockResponseBody { printerName = param[1], Code = "100" };
 			}
 			string openId = sessionIdOpenIdMap[sessionId];
 			string unlockURL = "http://10.11.226.200:8080/uniFLOWRESTService/WECHAT/UNLOCK/e97683c1962e7216784cf92d9QiEIlNGUKaPL5KmxUKGnyUuK-Mtyt86/XTR03183";
 			//string unlockURL = string.Format("{0}WECHAT/UNLOCK/{1}/{2}", param[0], openId, param[1]);
 			var res = RequestUtil.HttpGet(unlockURL);
 			_logger.LogInformation("Unlock Command:" + res);
-			return new UnlockResponseBody { printerName = param[1], errcode = "0" };
+			return new UnlockResponseBody { printerName = param[1], Code = "0" };
 		}
 
 		[Route("BindUser")]
@@ -90,7 +91,7 @@ namespace UniFlowGW.Controllers
 			string bindUserURL = "http://10.11.226.200:8080/uniFLOWRESTService/WECHAT/BINDUSER/{7B5CFF4A-D398-4F1D-9607-2FC521742514}/e97683c1962e7216784cf92d9QiEIlNGUKbj13yMpL50ruDfIgS6kYla";
 			//string bindUserURL = "";
 			var bindUserResult = RequestUtil.HttpGet(bindUserURL);
-			return new BindUserResponseBody { errcode = "0" };
+			return new BindUserResponseBody { Code = "0" };
 
 		}
 
@@ -99,8 +100,8 @@ namespace UniFlowGW.Controllers
 
 	public class BaseResponseBody
 	{
-		public string errcode { get; set; }
-		public string errmsg { get; set; }
+		public string Code { get; set; }
+		public string Message { get; set; }
 	}
 
 	public class WxThirdLoginResponseBody : BaseResponseBody
