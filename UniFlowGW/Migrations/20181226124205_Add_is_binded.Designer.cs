@@ -9,8 +9,8 @@ using UniFlowGW.Models;
 namespace UniFlowGW.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20181109113401_CreateInit")]
-    partial class CreateInit
+    [Migration("20181226124205_Add_is_binded")]
+    partial class Add_is_binded
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -30,6 +30,49 @@ namespace UniFlowGW.Migrations
                     b.HasKey("AdminId");
 
                     b.ToTable("Admins");
+                });
+
+            modelBuilder.Entity("UniFlowGW.Models.BindUser", b =>
+                {
+                    b.Property<string>("BindUserId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("BindTime");
+
+                    b.Property<bool>("IsBinded");
+
+                    b.Property<string>("UserLogin")
+                        .IsRequired();
+
+                    b.HasKey("BindUserId");
+
+                    b.ToTable("BindUsers");
+                });
+
+            modelBuilder.Entity("UniFlowGW.Models.ExternBinding", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("BindTime");
+
+                    b.Property<string>("BindUserId")
+                        .IsRequired();
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired();
+
+                    b.Property<string>("Type")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BindUserId");
+
+                    b.HasIndex("Type", "ExternalId")
+                        .IsUnique();
+
+                    b.ToTable("ExternBindings");
                 });
 
             modelBuilder.Entity("UniFlowGW.Models.PrintTask", b =>
@@ -58,6 +101,14 @@ namespace UniFlowGW.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("PrintTasks");
+                });
+
+            modelBuilder.Entity("UniFlowGW.Models.ExternBinding", b =>
+                {
+                    b.HasOne("UniFlowGW.Models.BindUser", "BindUser")
+                        .WithMany("ExternBindings")
+                        .HasForeignKey("BindUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

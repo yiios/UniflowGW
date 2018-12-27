@@ -65,7 +65,7 @@ namespace UniFlowGW.Models
 	{
 		public int Id { get; set; }
 		public string ExternalId { get; set; }
-        public ExternAccountType Type { get; set; }
+        public string Type { get; set; }
 		public string BindUserId { get; set; }
 		public DateTime BindTime { get; set; }
 
@@ -77,6 +77,7 @@ namespace UniFlowGW.Models
         public string BindUserId { get; set; }
         public string UserLogin { get; set; }
         public DateTime BindTime { get; set; }
+		public bool IsBinded { get; set; }
 
         public List<ExternBinding> ExternBindings { get; set; }
     }
@@ -100,10 +101,10 @@ namespace UniFlowGW.Models
             builder.Entity<ExternBinding>().Property(b => b.ExternalId).IsRequired();
             builder.Entity<ExternBinding>().Property(b => b.Type).IsRequired();
             builder.Entity<ExternBinding>().Property(b => b.BindUserId).IsRequired();
-            builder.Entity<ExternBinding>().Property(b => b.BindTime).IsRequired();
+            builder.Entity<ExternBinding>().HasIndex(
+                nameof(ExternBinding.Type), nameof(ExternBinding.ExternalId)).IsUnique();
 
             builder.Entity<BindUser>().Property(b => b.UserLogin).IsRequired();
-            builder.Entity<BindUser>().Property(b => b.BindTime).IsRequired();
         }
     }
 }

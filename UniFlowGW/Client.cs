@@ -8,7 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
 using WebSocketSharp;
 
 namespace UniFlowGW
@@ -18,7 +19,9 @@ namespace UniFlowGW
 	{
 
 		static WebSocket ws = new WebSocket("wss://wwopenhw.exmail.qq.com");
-		Timer timer;
+		Timer timer = new Timer(30000);
+
+
 
 		Dictionary<String, PrintJob> reqJobList = new Dictionary<String, PrintJob>();
 
@@ -32,14 +35,17 @@ namespace UniFlowGW
 			ws.OnMessage += (sender, e) => OnMessage(sender, e);
 			ws.OnError += (sender, e) => OnError(sender, e);
 			ws.OnClose += (sender, e) => OnClose(sender, e);
+			timer.Elapsed += (sender, e) => { Ping(); };
 		}
 
 
 		#region public method
 
+
 		public void ConnectWSS()
 		{
 			ws.Connect();
+
 		}
 
 
@@ -69,6 +75,8 @@ namespace UniFlowGW
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
 			_logger.LogInformation(json);
 			ws.Send(json);
+			//启动心跳
+			this.StartTimer();
 		}
 
 		public void ActiveDevie(string activeCode)
@@ -246,7 +254,7 @@ namespace UniFlowGW
 							var activeResponseModel = Util.JsonHelper.DeserializeJsonToObject<ActiveResponseModel>(jsonStr);
 							var secret = activeResponseModel.body.secret;
 							SubCrop(secret);
-							timer = new Timer(_ => Ping(), null, 0, 1000 * 30);
+
 						}
 						else if (null != json["body"]["jobid_list"])
 						{
@@ -284,6 +292,11 @@ namespace UniFlowGW
 		#endregion
 
 		#region private method
+
+		private void StartTimer()
+		{
+			timer.Start();
+		}
 
 		static string Hash(string input)
 		{

@@ -8,6 +8,7 @@ using System.Web;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using UniFlowGW.Models;
@@ -15,6 +16,46 @@ using UniFlowGW.Util;
 
 namespace UniFlowGW.Controllers
 {
+    public static class Error
+    {
+        public enum Codes
+        {
+            OK = 0,
+            LoginRequired = 100,
+            UserNotFound = 101,
+            InvalidUserId = 102,
+            InvalidUserData = 103,
+            DuplicateUser = 104,
+            BindNotFound = 109,
+            PrinterNotFound = 201,
+            PrinterNotConfigured = 202,
+            EncryptError = 701,
+            DecryptError = 702,
+            InvalidData = 801,
+            LoadObjectError = 802,
+            Exception = 900,
+            ExternalError = 901,
+        }
+
+        public static Dictionary<Codes, string> Messages { get; }
+        = new Dictionary<Codes, string>()
+        {
+            [Codes.OK] = "成功",
+            //[Codes.InvalidData] = "无效数据: [{0}]: {1}",
+            //[Codes.Exception] = "未知错误"
+        };
+        public static string AsMessage(this Codes code, params object[] args)
+        {
+            if (Messages.ContainsKey(code))
+                return string.Format(Messages[code], args);
+            return code.ToString() + ":" + string.Join(",", args);
+        }
+        public static string AsString(this Codes code)
+            => ((int)code).ToString();
+        public static Codes AsCode(this string codestr)
+            => Enum.Parse<Codes>(codestr);
+    }
+
 	[Route("api/[controller]")]
 	[ApiController]
 	public class UniflowController : ControllerBase
@@ -32,165 +73,280 @@ namespace UniFlowGW.Controllers
 			_logger = logger;
 		}
 
-        [HttpGet]
-		public async Task<ActionResult<BindStatusResponse>> CheckUser(LoginPasswordRequest req)
+        [HttpPost("checkuser")]
+        public async Task<ActionResult<BindStatusResponse>> CheckUser(LoginPasswordRequest req)
 		{
             if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
                 return new BindStatusResponse
                 {
-                    Code = ""
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                string baseurl = Configuration["UniflowService:Url"];
+                string key = Configuration["UniflowService:EncryptKey"];
+				string salt = EncryptUtil.CreateCryptographicallySecureGuid();
+
+				string login = EncryptUtil.Encrypt(req.Login, key, salt);
+                string password = EncryptUtil.Encrypt(req.Password, key, salt);
+
+                string url = $"{baseurl}/WECHAT/CHECKUSER/{login}/{password}";
+                _logger.LogTrace("Get " + url);
+                var result = await RequestUtil.HttpGetAsync(url);
+                _logger.LogTrace("Response: " + result);
+
+                var xdoc = XElement.Parse(result);
+				var ns = xdoc.GetDefaultNamespace();
+                var status = xdoc.Element(ns.GetName("Status")).Value;
+                var bindId = xdoc.Element(ns.GetName("UserRef")).Value;
+				var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
+				var message = status == "0" ? Error.Codes.OK.AsMessage() :
+					code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
+
+				var response = new BindStatusResponse
+                {
+                    Code = code,
+                    Message = message,
+                    BindId = bindId,
                 };
 
-            string baseurl = Configuration["UniflowService:Url"];
-            string key = Configuration["UniflowService:EncryptKey"];
-            string login = EncrpyUntil.Encrypt(req.Login, key);
-            string password = EncrpyUntil.Encrypt(req.Password, key);
+                if (status != "0")
+                    return response;
 
-            string url = $"{baseurl}/WECHAT/CHECKUSER/{login}/{password}";
-            _logger.LogTrace("Get " + url);
-            var result = await RequestUtil.HttpGetAsync(url);
-            _logger.LogTrace("Response: " + result);
-
-            var xdoc = XElement.Parse(result);
-            var status = xdoc.Element("Status").Value;
-            var bindId = xdoc.Element("UserRef").Value;
-            var response = new BindStatusResponse
+                var bind = _ctx.BindUsers.Find(bindId);
+                if (bind == null)
+                {
+                    _ctx.BindUsers.Add(new BindUser
+                    {
+                        BindUserId = bindId,
+                        UserLogin = req.Login,
+                    });
+                    await _ctx.SaveChangesAsync();
+                }
+                else if (bind.UserLogin != req.Login)
+                {
+                    _logger.LogWarning("Login changed: " + req.Login + " " + JsonHelper.SerializeObject(bind));
+                    bind.UserLogin = req.Login;
+                    await _ctx.SaveChangesAsync();
+                }
+                return response;
+            }
+            catch (Exception ex)
             {
-                Code = xdoc.Element("ErrorCode").Value,
-                Message = xdoc.Element("ErrorDesc").Value,
-                Status = status,
-                BindId = bindId,
-            };
-
-            //if (status != "0")
-            //    return response;
-
-            //var bind = _ctx.BindUsers.Find(bindId);
-            //if (bind == null)
-            //{
-            //    _ctx.BindUsers.Add(new BindUser
-            //    {
-            //        BindUserId = bindId,
-            //        UserLogin = req.Login,
-            //        BindTime = DateTime.Now,
-            //    });
-            //    await _ctx.SaveChangesAsync();
-            //}
-            //else if (bind.UserLogin != req.Login)
-            //{
-            //    _logger.LogWarning("Login changed: " + req.Login + " " + JsonHelper.SerializeObject(bind));
-            //    bind.UserLogin = req.Login;
-            //    await _ctx.SaveChangesAsync();
-            //}
-            return response;
+                _logger.LogError(ex, "error");
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
         }
 
-        [HttpGet]
+        [HttpPost("checkbind")]
         public ActionResult<BindStatusResponse> CheckBind(ExternalIdRequest req)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!Enum.TryParse<ExternAccountType>(req.Type, out var type))
-                return BadRequest("Type not supported: " + req.Type);
-
-            var bind = _ctx.ExternBindings
-                .Where(b => b.Type == type && b.ExternalId == req.ExternalId)
-                .FirstOrDefault();
-            return new BindStatusResponse
             {
-                Code = "0",
-                Message = "",
-                BindId = bind?.BindUserId ?? "",
-                Status = bind == null ? "1" : "0",
-            };
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                var bind = _ctx.ExternBindings
+                    .Where(b => b.Type == req.Type && b.ExternalId == req.ExternalId)
+                    .FirstOrDefault();
+                var code = bind == null ? Error.Codes.BindNotFound : Error.Codes.OK;
+                return new BindStatusResponse
+                {
+                    Code = code.AsString(),
+                    Message = code.AsMessage(),
+                    BindId = bind?.BindUserId ?? "",
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
         }
 
-        [HttpGet]
-        public async Task<ActionResult<BindStatusResponse>> Bind(BindExternalIdRequest req)
+        [HttpPost("bind")]
+        public async Task<ActionResult<StatusResponse>> Bind(BindExternalIdRequest req)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            string baseurl = Configuration["UniflowService:Url"];
-            string key = Configuration["UniflowService:EncryptKey"];
-            string login = EncrpyUntil.Encrypt(req.Login, key);
-            string password = EncrpyUntil.Encrypt(req.Password, key);
-
-            string url = $"{baseurl}/WECHAT/CHECKUSER/{login}/{password}";
-            _logger.LogTrace("Get " + url);
-            var result = await RequestUtil.HttpGetAsync(url);
-            _logger.LogTrace("Response: " + result);
-
-            var xdoc = XElement.Parse(result);
-            var status = xdoc.Element("Status").Value;
-            var bindId = xdoc.Element("UserRef").Value;
-            var response = new BindStatusResponse
             {
-                Code = xdoc.Element("ErrorCode").Value,
-                Message = xdoc.Element("ErrorDesc").Value,
-                Status = status,
-                BindId = bindId,
-            };
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new StatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
 
-            //if (status != "0")
-            //    return response;
+            try
+            {
+                var bind = await _ctx.BindUsers.FindAsync(req.BindId);
+                if (bind == null)
+                {
+                    var code = Error.Codes.BindNotFound;
+                    return new StatusResponse
+                    {
+                        Code = code.AsString(),
+                        Message = code.AsMessage(),
+                    };
+                }
 
-            //var bind = _ctx.BindUsers.Find(bindId);
-            //if (bind == null)
-            //{
-            //    _ctx.BindUsers.Add(new BindUser
-            //    {
-            //        BindUserId = bindId,
-            //        UserLogin = req.Login,
-            //        BindTime = DateTime.Now,
-            //    });
-            //    await _ctx.SaveChangesAsync();
-            //}
-            //else if (bind.UserLogin != req.Login)
-            //{
-            //    _logger.LogWarning("Login changed: " + req.Login + " " + JsonHelper.SerializeObject(bind));
-            //    bind.UserLogin = req.Login;
-            //    await _ctx.SaveChangesAsync();
-            //}
-            return response;
+                if (!bind.IsBinded)
+                {
+                    string baseurl = Configuration["UniflowService:Url"];
+                    string key = Configuration["UniflowService:EncryptKey"];
+
+                    string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
+
+                    string url = $"{baseurl}/WECHAT/BINDUSER/{req.BindId}/{openid}";
+                    _logger.LogTrace("Get " + url);
+                    var result = await RequestUtil.HttpGetAsync(url);
+                    _logger.LogTrace("Response: " + result);
+
+                    var xdoc = XElement.Parse(result);
+					var ns = xdoc.GetDefaultNamespace();
+					var status = xdoc.Element(ns.GetName("Status")).Value;
+                    var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
+                    var message = status == "0" ? Error.Codes.OK.AsMessage() :
+                        code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
+
+                    if (status != "0")
+                    {
+                        return new StatusResponse
+                        {
+                            Code = code,
+                            Message = message,
+                        };
+                    }
+
+                    bind.BindTime = DateTime.Now;
+					bind.IsBinded = true;
+                    await _ctx.SaveChangesAsync();
+                }
+
+                var externBind = _ctx.ExternBindings
+                    .Where(b => b.BindUserId == bind.BindUserId && b.Type == req.Type && b.ExternalId == req.ExternalId)
+                    .FirstOrDefault();
+
+                if (externBind == null)
+                {
+                    _ctx.ExternBindings.Add(new ExternBinding
+                    {
+                        BindUserId = bind.BindUserId,
+                        Type = req.Type,
+                        ExternalId = req.ExternalId,
+                        BindTime = DateTime.Now,
+                    });
+                    await _ctx.SaveChangesAsync();
+                }
+
+                return new StatusResponse
+                {
+                    Code = Error.Codes.OK.AsString(),
+                    Message = Error.Codes.OK.AsMessage(),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new StatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
         }
 
+        [HttpPost("unlock")]
+        public async Task<ActionResult<StatusResponse>> Unlock(UnlockRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new StatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
 
-        [Route("Unlock")]
-		public UnlockResponseBody Unlock(UnlockRequestBody unlockModel)
-		{
-			string encryptKey = Configuration["UniflowEncryptKey"];
-			string unlockCommand = EncrpyUntil.Decrypt(encryptKey, unlockModel.data);
-			//Http://UNIFLOW-SERVER:8080/uniFLOWRESTService/@XTR03183@12182018124231@10.11.226.146
-			string[] param = unlockCommand.Split("@");
-			var sessionId = unlockModel.sessionId;
-			if (!sessionIdOpenIdMap.ContainsKey(sessionId))
-			{
-				return new UnlockResponseBody { printerName = param[1], Code = "100" };
-			}
-			string openId = sessionIdOpenIdMap[sessionId];
-			string unlockURL = "http://10.11.226.200:8080/uniFLOWRESTService/WECHAT/UNLOCK/e97683c1962e7216784cf92d9QiEIlNGUKaPL5KmxUKGnyUuK-Mtyt86/XTR03183";
-			//string unlockURL = string.Format("{0}WECHAT/UNLOCK/{1}/{2}", param[0], openId, param[1]);
-			var res = RequestUtil.HttpGet(unlockURL);
-			_logger.LogInformation("Unlock Command:" + res);
-			return new UnlockResponseBody { printerName = param[1], Code = "0" };
-		}
+            try
+            {
+                var bind = await _ctx.BindUsers.FindAsync(req.BindId);
+                if (bind == null || bind.BindTime == null)
+                {
+                    return new StatusResponse
+                    {
+                        Code = Error.Codes.BindNotFound.AsString(),
+                        Message = Error.Codes.BindNotFound.AsMessage(),
+                    };
+                }
 
-		[Route("BindUser")]
-		public BindUserResponseBody BindUser(BindUserRequestBody bindModel)
-		{
-			string checkUserURL = "http://10.11.226.200:8080/uniFLOWRESTService/WECHAT/CHECKUSER/e97683c1962e7216784cf92dCg9qCn3QIfI/e97683c1962e7216784cf92d-Ku6rqCxOFd9jj73HlXmA24a721bHGsL";
-			//string checkUserURL = "";
-			var checkUserResult = RequestUtil.HttpGet(checkUserURL);
-			string bindUserURL = "http://10.11.226.200:8080/uniFLOWRESTService/WECHAT/BINDUSER/{7B5CFF4A-D398-4F1D-9607-2FC521742514}/e97683c1962e7216784cf92d9QiEIlNGUKbj13yMpL50ruDfIgS6kYla";
-			//string bindUserURL = "";
-			var bindUserResult = RequestUtil.HttpGet(bindUserURL);
-			return new BindUserResponseBody { Code = "0" };
+                string baseurl = Configuration["UniflowService:Url"];
+                string key = Configuration["UniflowService:EncryptKey"];
 
-		}
+                string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
+                string serial = req.Serial;
+
+                string url = $"{baseurl}/WECHAT/UNLOCK/{openid}/{serial}";
+                _logger.LogTrace("Get " + url);
+                var result = await RequestUtil.HttpGetAsync(url);
+                _logger.LogTrace("Response: " + result);
+
+                var xdoc = XElement.Parse(result);
+				var ns = xdoc.GetDefaultNamespace();
+				var status = xdoc.Element(ns.GetName("Status")).Value;
+                var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
+                var message = status == "0" ? Error.Codes.OK.AsMessage() :
+                    code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
+
+                return new StatusResponse
+                {
+                    Code = code,
+                    Message = message,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new StatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
 
 	}
+
+
 
     public class LoginPasswordRequest
     {
@@ -208,6 +364,14 @@ namespace UniFlowGW.Controllers
         public string Type { get; set; }
     }
 
+    public class UnlockRequest
+    {
+        [Required]
+        public string BindId { get; set; }
+        [Required]
+        public string Serial { get; set; }
+    }
+
     public class BindExternalIdRequest
     {
         [Required]
@@ -220,11 +384,9 @@ namespace UniFlowGW.Controllers
 
     public class StatusResponse : BaseResponseBody
     {
-        public string Status { get; set; }
     }
     public class BindStatusResponse : BaseResponseBody
     {
-        public string Status { get; set; }
         public string BindId { get; set; }
     }
 }

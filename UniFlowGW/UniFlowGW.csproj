@@ -48,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Views\Home\UnLock.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Home\Bind.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

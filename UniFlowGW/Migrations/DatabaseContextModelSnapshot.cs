@@ -30,6 +30,49 @@ namespace UniFlowGW.Migrations
                     b.ToTable("Admins");
                 });
 
+            modelBuilder.Entity("UniFlowGW.Models.BindUser", b =>
+                {
+                    b.Property<string>("BindUserId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("BindTime");
+
+                    b.Property<bool>("IsBinded");
+
+                    b.Property<string>("UserLogin")
+                        .IsRequired();
+
+                    b.HasKey("BindUserId");
+
+                    b.ToTable("BindUsers");
+                });
+
+            modelBuilder.Entity("UniFlowGW.Models.ExternBinding", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("BindTime");
+
+                    b.Property<string>("BindUserId")
+                        .IsRequired();
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired();
+
+                    b.Property<string>("Type")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BindUserId");
+
+                    b.HasIndex("Type", "ExternalId")
+                        .IsUnique();
+
+                    b.ToTable("ExternBindings");
+                });
+
             modelBuilder.Entity("UniFlowGW.Models.PrintTask", b =>
                 {
                     b.Property<int>("PrintTaskId")
@@ -58,20 +101,12 @@ namespace UniFlowGW.Migrations
                     b.ToTable("PrintTasks");
                 });
 
-            modelBuilder.Entity("UniFlowGW.Models.WeChatUser", b =>
+            modelBuilder.Entity("UniFlowGW.Models.ExternBinding", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("bindDate");
-
-                    b.Property<string>("openId");
-
-                    b.Property<string>("userId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("WeChatUsers");
+                    b.HasOne("UniFlowGW.Models.BindUser", "BindUser")
+                        .WithMany("ExternBindings")
+                        .HasForeignKey("BindUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

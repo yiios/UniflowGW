@@ -13,6 +13,7 @@ using UniFlowGW.Models;
 using Microsoft.EntityFrameworkCore;
 using UniFlowGW.Services;
 using Microsoft.Extensions.Logging;
+using UniFlowGW.Controllers;
 
 namespace UniFlowGW
 {
@@ -56,6 +57,11 @@ namespace UniFlowGW
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddSession(opt =>
+            {
+                opt.Cookie.Name = "uniFLOW.Gateway.Session";
+            });
+			services.AddTransient<UniflowController>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

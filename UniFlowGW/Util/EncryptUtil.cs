@@ -5,7 +5,7 @@ using System.Text;
 
 namespace UniFlowGW.Util
 {
-	public class EncrpyUntil
+	public class EncryptUtil
 	{
 		public static string CreateCryptographicallySecureGuid()
 		{
@@ -28,6 +28,11 @@ namespace UniFlowGW.Util
 
 		}
 
+        public static string Encrypt(string value, string key)
+        {
+            return Encrypt(value, key, CreateCryptographicallySecureGuid());
+        }
+
 		public static string Encrypt(string value, string key, string salt)
 		{
 			DeriveBytes deriveBytes = new Rfc2898DeriveBytes(key, Encoding.Unicode.GetBytes(salt));
@@ -44,7 +49,7 @@ namespace UniFlowGW.Util
 						streamWriter.Write(value);
 					}
 				}
-				return Base64Util.Encode(memoryStream.ToArray());
+				return salt + Base64Util.Encode(memoryStream.ToArray());
 			}
 		}
 

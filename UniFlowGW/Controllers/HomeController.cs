@@ -22,16 +22,18 @@ namespace UniFlowGW.Controllers
 		readonly DatabaseContext _ctx;
 		readonly ILogger<HomeController> _logger;
 		readonly IBackgroundTaskQueue queue;
+		UniflowController _uniflow;
 
 		public HomeController(IConfiguration configuration,
 			DatabaseContext ctx,
 			IBackgroundTaskQueue queue,
-			ILogger<HomeController> logger)
+			ILogger<HomeController> logger, UniflowController uniflow)
 		{
 			Configuration = configuration;
 			_ctx = ctx;
 			this.queue = queue;
 			_logger = logger;
+			_uniflow = uniflow;
 		}
 		public IConfiguration Configuration { get; }
 
@@ -140,16 +142,21 @@ namespace UniFlowGW.Controllers
 				var tokenModel = JsonHelper.DeserializeJsonToObject<AccessTokenModel>(resGetToken);
 				string accessToken = tokenModel.access_token;
 				string openId = tokenModel.openid;
-				HttpContext.Session.SetString("openId", openId);
 				_logger.LogInformation(string.Format("OpenId:{0}", openId));
-				var wechatUser = _ctx.ExternBindings.Where(s => s.ExternalId == openId).FirstOrDefault<ExternBinding>();
-				if (null == wechatUser)
+				var checkResult = _uniflow.CheckBind(
+				new ExternalIdRequest { ExternalId = openId, Type = "WeChatOpenID" });
+				_logger.LogInformation("[WxCallBack] CheckBind Code:" + checkResult.Value.Code);
+				if (checkResult.Value.Code == "0")
 				{
-					return View("Bind", new UserViewModel { openId = openId });
+					var bindId = checkResult.Value.BindId;
+					_logger.LogInformation("[WxCallBack] CheckBind bindId:" + bindId);
+					HttpContext.Session.SetString("WX_BindId", bindId);
+					userId = _ctx.BindUsers.Where(b => b.BindUserId == bindId).FirstOrDefault().UserLogin;
 				}
 				else
 				{
-					userId = wechatUser.BindUserId;
+					return View("Bind", new UserViewModel { openId = openId });
+
 				}
 			}
 			catch (Exception ex)
@@ -264,8 +271,6 @@ namespace UniFlowGW.Controllers
 				return View("Error", new ErrorViewModel { Message = "Document type not supported." });
 			return View(new PrintViewModel() { Path = path, Document = document, UserID = uid });
 		}
-
-        #endregion
 
 
 		[HttpPost]
@@ -500,33 +505,30 @@ namespace UniFlowGW.Controllers
 		[HttpPost("bind")]
 		public IActionResult Bind(UserViewModel model)
 		{
-			string domain = Configuration["LDAPDomain"];
-			var isValid = LDAPUtil.ValidateUser(domain, model.userName, model.password);
-			_logger.LogInformation("LDAP validtate:" + isValid);
-			if (isValid)
+			var req = new LoginPasswordRequest() { Login = model.userName, Password = model.password };
+			var checkResult = _uniflow.CheckUser(req);
+			if (checkResult.Result.Value.Code != "0")
 			{
-				var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == model.openId).SingleOrDefault<ExternBinding>();
-				if (null == findUser)
-				{
-					ExternBinding wechatUser = new ExternBinding();
-					wechatUser.ExternalId = model.openId;
-					wechatUser.BindUserId = model.userName;
-					wechatUser.BindTime = DateTime.Now;
-					_ctx.ExternBindings.Add(wechatUser);
-					_logger.LogInformation(string.Format("Insert WechatUser:{0}-{1}", model.userName, model.openId));
-				}
-				else
-				{
-					findUser.BindUserId = model.userName;
-					findUser.BindTime = DateTime.Now;
-					_ctx.ExternBindings.Update(findUser);
-					_logger.LogInformation(string.Format("Update WechatUser:{0}-{1}", model.userName, findUser.ExternalId));
-				}
-				_ctx.SaveChanges();
-				return RedirectToAction("wxOAuth", "Home");
+				ModelState.AddModelError("errorMsg", "用户名或密码错误，绑定失败!");
+				return View();
 			}
 
-			ModelState.AddModelError("errorMsg", "用户名或密码错误，绑定失败!");
+			var bindId = checkResult.Result.Value.BindId;
+			HttpContext.Session.SetString("BindId", bindId);
+
+			var bindResult = _uniflow.Bind(
+				new BindExternalIdRequest
+				{
+					ExternalId = model.openId,
+					Type = "WeChatOpenID",
+					BindId = bindId,
+				});
+
+			if (bindResult.Result.Value.Code == "0")
+			{
+				return RedirectToAction("wxOAuth", "Home");
+			}
+			ModelState.AddModelError("errorMsg", bindResult.Result.Value.Message);
 			return View();
 
 		}
@@ -546,6 +548,17 @@ namespace UniFlowGW.Controllers
 			_ctx.SaveChanges();
 			return RedirectToAction("wxOAuth", "Home");
 		}
+
+		[HttpGet("unlock")]
+		public IActionResult UnLock()
+		{
+			var unlockURL = Configuration["Test.Unlock.URL"];
+
+			RequestUtil.HttpGet(unlockURL);
+
+			return View();
+		}
+
 
 
 	}
