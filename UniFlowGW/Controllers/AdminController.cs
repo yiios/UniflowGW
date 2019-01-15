@@ -17,12 +17,12 @@ namespace UniFlowGW.Controllers
 	{
 
 		readonly DatabaseContext _ctx;
-		readonly ILogger<UserController> _logger;
+		readonly ILogger<AdminController> _logger;
 		public IConfiguration Configuration { get; }
 
 		public AdminController(IConfiguration configuration,
 			DatabaseContext ctx,
-			ILogger<UserController> logger)
+			ILogger<AdminController> logger)
 		{
 			Configuration = configuration;
 			_ctx = ctx;

@@ -9,10 +9,32 @@ namespace UniFlowGW.ViewModels
     public enum Orientation { [Display(Name = "纵向")] Portrait, [Display(Name = "横向")] Landscape, }
     public enum PaperMode {
         [Display(Name = "单面")] Simplex,
-        [Display(Name = "双面长边翻转")] LongEdge,
-        [Display(Name = "双面短边翻转")] ShortEdge,
+        [Display(Name = "长边双面")] LongEdge,
+        [Display(Name = "短边双面")] ShortEdge,
     }
     public class PrintViewModel
+    {
+        public string RequestId { get; set; }
+
+        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+        [Required]
+        [Display(Name = "文档")]
+        public IFormFile Document { get; set; }
+
+        [Display(Name = "份数")]
+        public int Copies { get; set; } = 1;
+        [Display(Name = "颜色模式")]
+        public ColorMode ColorMode { get; set; } = ColorMode.BW;
+        [Display(Name = "页面尺寸")]
+        public PaperSize PaperSize { get; set; } = PaperSize.A4;
+        [Display(Name = "方向")]
+        public Orientation Orientation { get; set; } = Orientation.Portrait;
+        [Display(Name = "装订模式")]
+        public PaperMode PaperMode { get; set; } = PaperMode.Simplex;
+    }
+
+    public class PrintTaskDetail
     {
         public string RequestId { get; set; }
 

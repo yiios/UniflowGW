@@ -4,14 +4,14 @@
 	ViewData["Title"] = "Bind";
 }
 
-<h2>绑定帐号</h2>
+<h2>用户认证</h2>
 
-<form action="/bind" method="post" class="form-horizontal">
-	<input id="openId" type="hidden" value="@Model?.openId" name="openId">
+<form method="post" class="form-horizontal">
+
 	<div class="form-group">
-		<label for="Document" class="col-xs-3 col-sm-2 control-label">用户名 </label>
+		<label for="userName" class="col-xs-3 col-sm-2 control-label">用户名: </label>
 		<div class="col-xs-9 col-sm-10">
-			<input id="userName" type="text" value="" name="userName" class="form-control" placeholder="输入用户名">
+			<input id="userName" type="text" value="@Model?.userName" name="userName" class="form-control" placeholder="输入用户名">
 		</div>
 	</div>
 	<div class="form-group">
@@ -28,7 +28,7 @@
 	<div class="form-group">
 		<label class="col-xs-3 col-sm-2"></label>
 		<div class="col-xs-9 col-sm-10">
-			<button type="submit" class="btn btn-danger">绑定</button>
+			<button type="submit" class="btn btn-danger">提交</button>
 		</div>
 	</div>
 </form>

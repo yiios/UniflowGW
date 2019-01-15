@@ -3,10 +3,10 @@
 @using Microsoft.Extensions.Configuration;
 @{
 	ViewData["Title"] = "Result";
-	var printerSN = Context.Session.GetCurrentPrinterSN();
-	bool hasPrinter = !string.IsNullOrEmpty(printerSN);
-	var loginId = Context.Session.GetLdapLoginId();
-	var fileUploadSwitch = configuration["ModuleSwitch:FileUpload"];
+ var printerSN = Context.Session.GetCurrentPrinterSN();
+ bool hasPrinter = !string.IsNullOrEmpty(printerSN);
+ var loginId = Context.Session.GetLdapLoginId();
+ var fileUploadSwitch = configuration["ModuleSwitch:FileUpload"];
 }
 @inject IConfiguration configuration
 
@@ -26,30 +26,29 @@
 		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
-				@if (fileUploadSwitch.Equals("On"))
-				{
-					<li class="active"><a href="#"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
-					<li><a asp-action="History" asp-controller="Home"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
+				@if (fileUploadSwitch.Equals("On")){
+				<li><a asp-action="Index" asp-controller="Home"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
+				<li><a asp-action="History" asp-controller="Home"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
 				}
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-							<span class="glyphicon glyphicon-print"></span> 打印机
-							@if (hasPrinter)
-							{
-								Write($"[{printerSN}]");
-							}
-							<span class="caret"></span>
-						</a>
-						<ul class="dropdown-menu">
-							@*<li role="separator" class="divider"></li>*@
-							@if (hasPrinter)
-							{
-								<li><a asp-action="Unlock"><span class="glyphicon glyphicon-print"></span> 开机打印</a></li>
-							}
-							@*<li><a href="#"><span class="glyphicon glyphicon-barcode"></span> 扫码开机打印</a></li>*@
-						</ul>
-					</li>
-				</ul>
+				<li class="dropdown active">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+						<span class="glyphicon glyphicon-print"></span> 打印机
+						@if (hasPrinter)
+						{
+							Write($"[{printerSN}]");
+						}
+						<span class="caret"></span>
+					</a>
+					<ul class="dropdown-menu">
+						@*<li role="separator" class="divider"></li>*@
+						@if (hasPrinter)
+						{
+							<li><a asp-action="Unlock"><span class="glyphicon glyphicon-print"></span> 开机打印</a></li>
+						}
+						@*<li><a href="#"><span class="glyphicon glyphicon-barcode"></span> 扫码开机打印</a></li>*@
+					</ul>
+				</li>
+			</ul>
 			@*<form class="navbar-form navbar-left">
 					<div class="form-group">
 						<input type="text" class="form-control" placeholder="Search">
@@ -73,6 +72,13 @@
 	</div><!-- /.container-fluid -->
 </nav>
 
-<h2>结果</h2>
+<h2>打印机开机</h2>
 
-<p>打印任务已经提交！请<a asp-action="Index" asp-controller="Home">返回</a>。</p>
+@if ((bool)ViewBag.Result)
+{
+	<p>开机成功，您可以操作打印机完成打印。</p>
+}
+else
+{
+	<p>开机失败，请稍候再试。</p>
+}

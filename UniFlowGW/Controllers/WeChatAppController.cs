@@ -16,16 +16,15 @@ namespace UniFlowGW.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class WeChatController : ControllerBase
+	public class WeChatAppController : ControllerBase
 	{
 		readonly DatabaseContext _ctx;
-		readonly ILogger<WeChatController> _logger;
-		Dictionary<string, string> sessionIdOpenIdMap = new Dictionary<string, string>();
+		readonly ILogger<WeChatAppController> _logger;
 		UniflowController _uniflow;
 
-		public WeChatController(IConfiguration configuration,
+		public WeChatAppController(IConfiguration configuration,
 			DatabaseContext ctx,
-			ILogger<WeChatController> logger,
+			ILogger<WeChatAppController> logger,
 			UniflowController uniflow)
 		{
 			Configuration = configuration;
@@ -36,7 +35,7 @@ namespace UniFlowGW.Controllers
 		public IConfiguration Configuration { get; }
 
 		[HttpGet("login")]
-		public async Task<ActionResult<ThirdLoginResponseBody>> Login(string code)
+		public async Task<ActionResult<StatusResponse>> Login(string code)
 		{
 			var url = string.Format(
 				Configuration["WxApp:UrlPattern"],
@@ -55,7 +54,7 @@ namespace UniFlowGW.Controllers
 			//dynamic response = JsonConvert.DeserializeObject(res);
 			if (response.errcode != 0)
 			{
-				return new ThirdLoginResponseBody
+				return new StatusResponse
 				{
 					Code = Error.Codes.ExternalError.AsString(),
 					Message = Error.Codes.ExternalError.AsMessage(
@@ -64,28 +63,30 @@ namespace UniFlowGW.Controllers
 			}
 
 			var openId = response.openid as string;
-			HttpContext.Session.SetString("OpenID", openId);
-
+			HttpContext.Session.SetExternId(openId, "WeChatAppOpenID");
+			_logger.LogInformation(string.Format("[WeChatAppController] [Login] OpenId:{0}", openId));
 			var checkResult = _uniflow.CheckBind(
-				new ExternalIdRequest { ExternalId = openId, Type = "WeChatOpenID" });
+				new ExternalIdRequest { ExternalId = openId, Type = "WeChatAppOpenID" });
+			_logger.LogInformation(string.Format("[WeChatAppController] [Login] [CheckBind] Code:{0}", checkResult.Value.Code));
 			if (checkResult.Value.Code == "0")
 			{
 				var bindId = checkResult.Value.BindId;
-				HttpContext.Session.SetString("BindId", bindId);
+				HttpContext.Session.SetBindId(bindId);
+				HttpContext.Session.SetLdapLoginId(checkResult.Value.LdapLoginId);
 			}
 
-			return new ThirdLoginResponseBody
+			return new StatusResponse
 			{
 				Code = checkResult.Value.Code,
 				Message = checkResult.Value.Message,
-				SessionId = HttpContext.Session.Id,
 			};
 		}
 
 		[HttpPost("bind")]
 		public async Task<ActionResult<StatusResponse>> Bind(LoginPasswordRequest req)
 		{
-			var openId = HttpContext.Session.GetString("OpenID");
+			var (openId, type) = HttpContext.Session.GetExternId();
+			_logger.LogInformation(string.Format("[WeChatAppController] [Bind] OpenId:{0},Type:{1}", openId, type));
 			if (string.IsNullOrEmpty(openId))
 			{
 				return new StatusResponse
@@ -96,6 +97,7 @@ namespace UniFlowGW.Controllers
 			}
 
 			var checkResult = await _uniflow.CheckUser(req);
+			_logger.LogInformation(string.Format("[WeChatAppController] [Bind] [CheckUser] Code:{0}", checkResult.Value.Code));
 			if (checkResult.Value.Code != "0")
 			{
 				return new StatusResponse
@@ -106,13 +108,13 @@ namespace UniFlowGW.Controllers
 			}
 
 			var bindId = checkResult.Value.BindId;
-			HttpContext.Session.SetString("BindId", bindId);
+			HttpContext.Session.SetBindId(bindId);
 
 			var bindResult = await _uniflow.Bind(
 				new BindExternalIdRequest
 				{
 					ExternalId = openId,
-					Type = "WeChatOpenID",
+					Type = "WeChatAppOpenID",
 					BindId = bindId,
 				});
 
@@ -124,9 +126,10 @@ namespace UniFlowGW.Controllers
 		}
 
 		[HttpGet("unlock")]
-		public async Task<ActionResult<UnlockResponse>> Unlock(string barcodeData)
+		public async Task<ActionResult<UnlockResponse>> Unlock(string data)
 		{
-			var openId = HttpContext.Session.GetString("OpenID");
+			var (openId, type) = HttpContext.Session.GetExternId();
+			_logger.LogInformation(string.Format("[WeChatAppController] [Unlock] OpenId:{0},Type:{1}", openId, type));
 			if (string.IsNullOrEmpty(openId))
 			{
 				return new UnlockResponse
@@ -136,15 +139,17 @@ namespace UniFlowGW.Controllers
 				};
 			}
 
-			var bindId = HttpContext.Session.GetString("BindId");
+			var bindId = HttpContext.Session.GetBindId();
+			_logger.LogInformation(string.Format("[WeChatAppController] [Unlock] bindId:{0}", bindId));
 			if (string.IsNullOrEmpty(bindId))
 			{
 				var checkResult = _uniflow.CheckBind(
-					new ExternalIdRequest { ExternalId = openId, Type = "WeChatOpenID" });
+					new ExternalIdRequest { ExternalId = openId, Type = "WeChatAppOpenID" });
+				_logger.LogInformation(string.Format("[WeChatAppController] [Unlock] [CheckBind] Code:{0}", checkResult.Value.Code));
 				if (checkResult.Value.Code == "0")
 				{
 					bindId = checkResult.Value.BindId;
-					HttpContext.Session.SetString("BindId", bindId);
+					HttpContext.Session.SetBindId(bindId);
 				}
 
 				return new UnlockResponse
@@ -157,7 +162,7 @@ namespace UniFlowGW.Controllers
 			string key = Configuration["UniflowService:EncryptKey"];
 			try
 			{
-				barcodeData = EncryptUtil.Decrypt(key, barcodeData);
+				data = EncryptUtil.Decrypt(key, data);
 			}
 			catch (Exception ex)
 			{
@@ -167,7 +172,7 @@ namespace UniFlowGW.Controllers
 					Message = Error.Codes.DecryptError.AsMessage(ex.Message),
 				};
 			}
-			var parts = barcodeData.Split('@');
+			var parts = data.Split('@');
 			if (parts.Length < 4 ||
 				!Uri.IsWellFormedUriString(parts[0], UriKind.Absolute) ||
 				string.IsNullOrEmpty(parts[1]))
@@ -182,6 +187,7 @@ namespace UniFlowGW.Controllers
 			var serial = parts[1];
 
 			var result = await _uniflow.Unlock(new UnlockRequest { BindId = bindId, Serial = serial });
+			_logger.LogInformation(string.Format("[WeChatAppController] [Unlock] Code:{0}", result.Value.Code));
 			if (result.Value.Code == "0")
 			{
 
@@ -195,7 +201,6 @@ namespace UniFlowGW.Controllers
 			}
 			else
 			{
-
 				return new UnlockResponse
 				{
 					Code = result.Value.Code,

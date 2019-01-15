@@ -27,13 +27,13 @@ namespace UniFlowGW.Models
         [Display(Name = "详细信息")]
 		public string Detail { get; set; }
 
-        private PrintViewModel pmodel;
+        private PrintTaskDetail pmodel;
 		[NotMapped]
-		public PrintViewModel PrintModel
+		public PrintTaskDetail PrintModel
 		{
 			get {
                 if (pmodel == null && !string.IsNullOrEmpty(Detail))
-                    pmodel = JsonConvert.DeserializeObject<PrintViewModel>(Detail);
+                    pmodel = JsonConvert.DeserializeObject<PrintTaskDetail>(Detail);
                 return pmodel;
             }
 			set { Detail = JsonConvert.SerializeObject(value); pmodel = value; }

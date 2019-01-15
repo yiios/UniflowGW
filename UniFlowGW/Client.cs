@@ -18,18 +18,15 @@ namespace UniFlowGW
 	public class Client
 	{
 
-		static WebSocket ws = new WebSocket("wss://wwopenhw.exmail.qq.com");
+		static WebSocket ws;
 		Timer timer = new Timer(30000);
-
-
-
 		Dictionary<String, PrintJob> reqJobList = new Dictionary<String, PrintJob>();
-
-		IConfiguration configuration;
 		readonly ILogger<Client> _logger;
+		public IConfiguration Configuration { get; }
 		public Client(IConfiguration configuration, ILogger<Client> logger)
 		{
-			this.configuration = configuration;
+			Configuration = configuration;
+			ws=new WebSocket(Configuration["WeChat:WxWorkIOT:WebSocketServer"]);
 			this._logger = logger;
 			ws.OnOpen += (sender, e) => OnOpen(sender, e);
 			ws.OnMessage += (sender, e) => OnMessage(sender, e);
@@ -51,12 +48,13 @@ namespace UniFlowGW
 
 		public void RegisterNetWork()
 		{
-			var sn = "XTR03183";
-			var timestamp = ((Int32)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
-			var nonce = "123456";
-			var secretNo = "101d7a8c8d6db9842a493b40642107a4";
+			var sn = Configuration["WeChat:WxWorkIOT:PrinterSN"].ToString();
+			var timestamp = (Int32)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+			Random rnd = new Random(); 
+			var nonce = rnd.Next(100000, 999999); 
+			var secretNo = Configuration["WeChat:WxWorkIOT:Secret"];
 			var type = "register";
-			var paramArray = new List<string> { sn, secretNo, timestamp, nonce, type };
+			var paramArray = new List<string> { sn, secretNo, timestamp.ToString(), nonce.ToString(), type };
 			paramArray.Sort(StringComparer.Ordinal);
 			var sign = "";
 			using (SHA1Managed sha1 = new SHA1Managed())
@@ -73,7 +71,7 @@ namespace UniFlowGW
 
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [RegisterNetWork] Json:{0}", json));
 			ws.Send(json);
 			//启动心跳
 			this.StartTimer();
@@ -90,7 +88,7 @@ namespace UniFlowGW
 
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [ActiveDevie] Json:{0}", json));
 			ws.Send(json);
 		}
 
@@ -105,7 +103,7 @@ namespace UniFlowGW
 
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [SubCrop] Json:{0}", json));
 			ws.Send(json);
 		}
 
@@ -119,7 +117,7 @@ namespace UniFlowGW
 				headers = new Headers { req_id = reqId },
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [Ping] Json:{0}", json));
 
 			ws.Send(json);
 		}
@@ -135,7 +133,7 @@ namespace UniFlowGW
 				body = new JobRequestBody { status = 0 }  //获取未打印文件列表
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [GetJobList] Json:{0}", json));
 			ws.Send(json);
 		}
 
@@ -150,7 +148,7 @@ namespace UniFlowGW
 
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [GetPrintFile] Json:{0}", json));
 			ws.Send(json);
 		}
 
@@ -165,7 +163,7 @@ namespace UniFlowGW
 				body = statusBody,
 			};
 			var json = UniFlowGW.Util.JsonHelper.SerializeObject(model);
-			_logger.LogInformation(json);
+			_logger.LogInformation(string.Format("[WebSocketClient] [ReportPrintFileStatus] Json:{0}", json));
 			ws.Send(json);
 		}
 
@@ -202,7 +200,7 @@ namespace UniFlowGW
 				var jobId = "";
 				try
 				{
-					_logger.LogInformation("Binary data length:" + e.RawData.Length);
+					_logger.LogInformation("[WebSocketClient] [BinaryMessage] Binary data length:" + e.RawData.Length);
 
 					var reqLength = BitConverter.ToInt32(e.RawData.Skip(4).Take(4).ToArray());
 					var reqId = System.Text.Encoding.UTF8.GetString(e.RawData.Skip(8).Take(reqLength).ToArray());
@@ -237,7 +235,7 @@ namespace UniFlowGW
 			{
 				try
 				{
-					_logger.LogInformation(e.Data);
+					_logger.LogInformation(string.Format("[WebSocketClient] [TextMessage] data:{0}", e.Data));
 					var jsonStr = e.Data;
 					JObject json = JObject.Parse(jsonStr);
 					if (null != json["body"])
@@ -295,7 +293,9 @@ namespace UniFlowGW
 
 		private void StartTimer()
 		{
-			timer.Start();
+			//timer = new Timer(30000);
+			if (timer != null)
+				timer.Start();
 		}
 
 		static string Hash(string input)
@@ -318,7 +318,7 @@ namespace UniFlowGW
 			var tempxml = tmpfile + ".xml";
 			System.IO.File.WriteAllText(tempxml, ticket);
 
-			var targetPaths = this.configuration["TaskTargetPath"];
+			var targetPaths = Configuration["TaskTargetPath"];
 			foreach (var targetPath in targetPaths.Split(';'))
 			{
 				var targetdoc = Path.Combine(targetPath.Trim(), outdoc);
@@ -359,8 +359,8 @@ namespace UniFlowGW
 	public class RegisterRequestBody
 	{
 		public string device_signature { get; set; }
-		public string nonce { get; set; }
-		public string timestamp { get; set; }
+		public int nonce { get; set; }
+		public int timestamp { get; set; }
 		public string sn { get; set; }
 	}
 

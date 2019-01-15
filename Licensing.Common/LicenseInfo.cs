@@ -67,12 +67,14 @@ namespace Licensing
     public class LicenseCheckRequest
     {
         public string Key { get; set; }
+        public string Product { get; set; }
         public HardwareIdentifier Hardware { get; set; }
     }
     [Serializable]
     public class RegisterRequest
     {
         public string Key { get; set; }
+        public string Product { get; set; }
         public HardwareIdentifier Hardware { get; set; }
     }
     [Serializable]

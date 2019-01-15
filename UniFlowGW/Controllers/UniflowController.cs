@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using UniFlowGW.Models;
@@ -56,7 +57,8 @@ namespace UniFlowGW.Controllers
             => Enum.Parse<Codes>(codestr);
     }
 
-	[Route("api/[controller]")]
+#if !DEBUG_DUMMY
+    [Route("api/[controller]")]
 	[ApiController]
 	public class UniflowController : ControllerBase
 	{
@@ -114,6 +116,7 @@ namespace UniFlowGW.Controllers
                     Code = code,
                     Message = message,
                     BindId = bindId,
+                    LdapLoginId = req.Login,
                 };
 
                 if (status != "0")
@@ -166,6 +169,7 @@ namespace UniFlowGW.Controllers
             try
             {
                 var bind = _ctx.ExternBindings
+					.Include(b => b.BindUser)
                     .Where(b => b.Type == req.Type && b.ExternalId == req.ExternalId)
                     .FirstOrDefault();
                 var code = bind == null ? Error.Codes.BindNotFound : Error.Codes.OK;
@@ -173,7 +177,8 @@ namespace UniFlowGW.Controllers
                 {
                     Code = code.AsString(),
                     Message = code.AsMessage(),
-                    BindId = bind?.BindUserId ?? "",
+                    BindId = bind?.BindUserId ?? null,
+                    LdapLoginId = bind?.BindUser.UserLogin ?? null,
                 };
             }
             catch (Exception ex)
@@ -345,8 +350,244 @@ namespace UniFlowGW.Controllers
         }
 
 	}
+#endif
+#if DEBUG_DUMMY
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UniflowController : ControllerBase
+    {
+        readonly DatabaseContext _ctx;
+        readonly ILogger<UniflowController> _logger;
+        IConfiguration Configuration { get; }
 
+        public UniflowController(IConfiguration configuration,
+            DatabaseContext ctx,
+            ILogger<UniflowController> logger)
+        {
+            Configuration = configuration;
+            _ctx = ctx;
+            _logger = logger;
+        }
 
+        [HttpPost("checkuser")]
+        public async Task<ActionResult<BindStatusResponse>> CheckUser(LoginPasswordRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                string baseurl = Configuration["UniflowService:Url"];
+                string key = Configuration["UniflowService:EncryptKey"];
+                string salt = EncryptUtil.CreateCryptographicallySecureGuid();
+
+                string login = EncryptUtil.Encrypt(req.Login, key, salt);
+                string password = EncryptUtil.Encrypt(req.Password, key, salt);
+
+                var bindId = req.Login;
+                var code = "0";
+                var message = "OK";
+
+                var response = new BindStatusResponse
+                {
+                    Code = code,
+                    Message = message,
+                    BindId = bindId,
+                    LdapLoginId = req.Login,
+                };
+
+                var bind = _ctx.BindUsers.Find(bindId);
+                if (bind == null)
+                {
+                    _ctx.BindUsers.Add(new BindUser
+                    {
+                        BindUserId = bindId,
+                        UserLogin = req.Login,
+                    });
+                    await _ctx.SaveChangesAsync();
+                }
+                else if (bind.UserLogin != req.Login)
+                {
+                    _logger.LogWarning("Login changed: " + req.Login + " " + JsonHelper.SerializeObject(bind));
+                    bind.UserLogin = req.Login;
+                    await _ctx.SaveChangesAsync();
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
+
+        [HttpPost("checkbind")]
+        public ActionResult<BindStatusResponse> CheckBind(ExternalIdRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                var bind = _ctx.ExternBindings
+                    .Where(b => b.Type == req.Type && b.ExternalId == req.ExternalId)
+                    .FirstOrDefault();
+                var code = bind == null ? Error.Codes.BindNotFound : Error.Codes.OK;
+                return new BindStatusResponse
+                {
+                    Code = code.AsString(),
+                    Message = code.AsMessage(),
+                    BindId = bind?.BindUserId ?? null,
+                    LdapLoginId = bind?.BindUser.UserLogin ?? null,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new BindStatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
+
+        [HttpPost("bind")]
+        public async Task<ActionResult<StatusResponse>> Bind(BindExternalIdRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new StatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                var bind = await _ctx.BindUsers.FindAsync(req.BindId);
+                if (bind == null)
+                {
+                    var code = Error.Codes.BindNotFound;
+                    return new StatusResponse
+                    {
+                        Code = code.AsString(),
+                        Message = code.AsMessage(),
+                    };
+                }
+
+                if (!bind.IsBinded)
+                {
+                    bind.BindTime = DateTime.Now;
+                    bind.IsBinded = true;
+                    await _ctx.SaveChangesAsync();
+                }
+
+                var externBind = _ctx.ExternBindings
+                    .Where(b => b.BindUserId == bind.BindUserId && b.Type == req.Type && b.ExternalId == req.ExternalId)
+                    .FirstOrDefault();
+
+                if (externBind == null)
+                {
+                    _ctx.ExternBindings.Add(new ExternBinding
+                    {
+                        BindUserId = bind.BindUserId,
+                        Type = req.Type,
+                        ExternalId = req.ExternalId,
+                        BindTime = DateTime.Now,
+                    });
+                    await _ctx.SaveChangesAsync();
+                }
+
+                return new StatusResponse
+                {
+                    Code = Error.Codes.OK.AsString(),
+                    Message = Error.Codes.OK.AsMessage(),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new StatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
+
+        [HttpPost("unlock")]
+        public async Task<ActionResult<StatusResponse>> Unlock(UnlockRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new StatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                var bind = await _ctx.BindUsers.FindAsync(req.BindId);
+                if (bind == null || bind.BindTime == null)
+                {
+                    return new StatusResponse
+                    {
+                        Code = Error.Codes.BindNotFound.AsString(),
+                        Message = Error.Codes.BindNotFound.AsMessage(),
+                    };
+                }
+
+                return new StatusResponse
+                {
+                    Code = "0",
+                    Message = "OK",
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new StatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
+
+    }
+#endif
 
     public class LoginPasswordRequest
     {
@@ -388,5 +629,6 @@ namespace UniFlowGW.Controllers
     public class BindStatusResponse : BaseResponseBody
     {
         public string BindId { get; set; }
+        public string LdapLoginId { get; set; }
     }
 }

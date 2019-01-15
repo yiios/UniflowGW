@@ -20,7 +20,7 @@ namespace Convert2PDFConsole
             if (args.Length != 3) Environment.Exit(-1);
             var input = args[0];
             var output = args[1];
-            if (args[2] != "-landscape" || args[2] != "-portrait") Environment.Exit(-2);
+            if (args[2] != "-landscape" && args[2] != "-portrait") Environment.Exit(-2);
             bool land = args[2] == "-landscape";
             if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(output))
                 Environment.Exit(-1);
@@ -45,7 +45,7 @@ namespace Convert2PDFConsole
                 //pptApp.Visible = OFFICECORE.MsoTriState.msoFalse;
                 pptApp.DisplayAlerts = POWERPOINT.PpAlertLevel.ppAlertsNone;
 
-                objPresSet = pptApp.Presentations.Open(sourcePath + "::IN_VA_LID___PA_SS_WO_RD", MsoTriState.msoTrue, MsoTriState.msoTrue, MsoTriState.msoFalse);
+                objPresSet = pptApp.Presentations.Open(sourcePath + "::IN_VA_LI______D", MsoTriState.msoTrue, MsoTriState.msoTrue, MsoTriState.msoFalse);
                 //info.AppendFormat("文件: {0}, 共{1}页", sourcePath, objPresSet.Slides.Count);
                 objPresSet.SaveAs(targetPath, POWERPOINT.PpSaveAsFileType.ppSaveAsPDF);
             }
@@ -88,13 +88,17 @@ namespace Convert2PDFConsole
                 application.DisplayAlerts = false;
                 string target = sourcePath.Replace(".xlsx", ".pdf");
                 object type = targetType;
-                workBook = application.Workbooks.Open(sourcePath, missing, true, missing, "IN_VI_LA_D___PA_SS_WO_RD", missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
+                workBook = application.Workbooks.Open(sourcePath,
+                    AddToMru: false, ReadOnly: true, Password: "IN_VA_LI______D");
                 foreach (EXCEL.Worksheet sheet in workBook.Sheets)
                 {
                     sheet.PageSetup.Orientation = land ?
                         EXCEL.XlPageOrientation.xlLandscape : EXCEL.XlPageOrientation.xlPortrait;
                 }
-                workBook.ExportAsFixedFormat(targetType, targetPath, EXCEL.XlFixedFormatQuality.xlQualityStandard, true, false, missing, missing, missing, missing);
+                workBook.ExportAsFixedFormat(targetType, targetPath,
+                    EXCEL.XlFixedFormatQuality.xlQualityStandard,
+                    IncludeDocProperties: true,
+                    IgnorePrintAreas: false);
                 result = true;
             }
             catch
@@ -105,7 +109,7 @@ namespace Convert2PDFConsole
             {
                 if (workBook != null)
                 {
-                    workBook.Close(true, missing, missing);
+                    workBook.Close(SaveChanges: false);
                     workBook = null;
                 }
                 if (application != null)
@@ -126,7 +130,6 @@ namespace Convert2PDFConsole
             int result = -1;
             object paramMissing = Type.Missing;
 
-            WORD.WdExportFormat exportFormat = WORD.WdExportFormat.wdExportFormatPDF;
             WORD.Application wordApplication = null;
             WORD.Document wordDocument = null;
             try
@@ -135,8 +138,16 @@ namespace Convert2PDFConsole
                 wordApplication = new WORD.Application();
                 wordApplication.Visible = false;
                 wordApplication.DisplayAlerts = WORD.WdAlertLevel.wdAlertsNone;
-                wordDocument = wordApplication.Documents.OpenNoRepairDialog(source,
-                    ReadOnly: true, PasswordDocument: "IN_VA_LI_D___PA_SS_WO_RD");
+                try
+                {
+                    wordDocument = wordApplication.Documents.OpenNoRepairDialog(
+                        source, AddToRecentFiles: false,
+                        ReadOnly: true, PasswordDocument: "IN_VA_LI______D");
+                }
+                catch
+                {
+                    return result;
+                }
                 if (wordDocument != null)
                 {
                     WORD.WdStatistic stat = WORD.WdStatistic.wdStatisticPages;
@@ -150,12 +161,12 @@ namespace Convert2PDFConsole
             {
                 if (wordDocument != null)
                 {
-                    wordDocument.Close(ref paramMissing, ref paramMissing, ref paramMissing);
+                    wordDocument.Close(SaveChanges: false);
                     wordDocument = null;
                 }
                 if (wordApplication != null)
                 {
-                    wordApplication.Quit(ref paramMissing, ref paramMissing, ref paramMissing);
+                    wordApplication.Quit(SaveChanges: false);
                     wordApplication = null;
                 }
                 GC.Collect();

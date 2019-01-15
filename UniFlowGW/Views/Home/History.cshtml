@@ -1,14 +1,14 @@
-﻿@model PrintTaskDetail
-@using UniFlowGW.Controllers;
+﻿@using UniFlowGW.Controllers;
 @using Microsoft.Extensions.Configuration;
 @{
-	ViewData["Title"] = "Result";
+	ViewData["Title"] = "打印历史";
 	var printerSN = Context.Session.GetCurrentPrinterSN();
 	bool hasPrinter = !string.IsNullOrEmpty(printerSN);
 	var loginId = Context.Session.GetLdapLoginId();
 	var fileUploadSwitch = configuration["ModuleSwitch:FileUpload"];
 }
 @inject IConfiguration configuration
+@inject DatabaseContext ctx
 
 <nav class="navbar navbar-default">
 	<div class="container-fluid">
@@ -28,8 +28,8 @@
 			<ul class="nav navbar-nav">
 				@if (fileUploadSwitch.Equals("On"))
 				{
-					<li class="active"><a href="#"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
-					<li><a asp-action="History" asp-controller="Home"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
+					<li><a asp-action="Index" asp-controller="Home"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
+					<li class="active"><a href="#"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
 				}
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -73,6 +73,42 @@
 	</div><!-- /.container-fluid -->
 </nav>
 
-<h2>结果</h2>
+@{
+	<hr />
+	<h3>打印历史</h3>
 
-<p>打印任务已经提交！请<a asp-action="Index" asp-controller="Home">返回</a>。</p>
+	var tasks = from t in ctx.PrintTasks
+				where t.UserID == loginId
+				orderby t.Time descending
+				select t;
+
+	<ul class="list-group">
+		@foreach (var task in tasks) // .Take(10))
+		{
+			var st = "";
+			switch (task.Status)
+			{
+				case PrintTaskStatus.Committed: st = "success"; break;
+				case PrintTaskStatus.Failed: st = "danger"; break;
+				case PrintTaskStatus.Processing: st = "info"; break;
+				default: break;
+			}
+
+			<li class="list-group-item list-group-item-@st">
+				<h4>@task.Document</h4>
+				<small>@task.Time</small> - @task.Status.GetDisplayName() <br />
+				份数: @task.PrintModel.Copies |
+				颜色模式: @Html.DisplayFor(m => task.PrintModel.ColorMode) |
+				页面尺寸: @Html.DisplayFor(m => task.PrintModel.PaperSize) |
+				方向: @Html.DisplayFor(m => task.PrintModel.Orientation) |
+				装订模式: @Html.DisplayFor(m => task.PrintModel.PaperMode)
+				@if (task.Status == PrintTaskStatus.Failed)
+				{
+					<p>错误消息: @task.Message</p>
+				}
+			</li>
+		}
+
+	</ul>
+
+}

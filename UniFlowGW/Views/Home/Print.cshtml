@@ -1,32 +1,96 @@
 ﻿@model PrintViewModel
+@using UniFlowGW.Controllers;
+@using Microsoft.Extensions.Configuration;
 @{
-    ViewData["Title"] = "Print";
+    ViewData["Title"] = "上传文档打印";
+
+    var printerSN = Context.Session.GetCurrentPrinterSN();
+    bool hasPrinter = !string.IsNullOrEmpty(printerSN);
+    var loginId = Context.Session.GetLdapLoginId();
+	var fileUploadSwitch = configuration["ModuleSwitch:FileUpload"];
 }
+@inject IConfiguration configuration
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Uniflow GW</a>
+        </div>
 
-<h2>打印</h2>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+				@if (fileUploadSwitch.Equals("On"))
+				{
+                <li class="active"><a href="#"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
+                <li><a asp-action="History" asp-controller="Home"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
+				}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-print"></span> 打印机
+                        @if (hasPrinter)
+                        {
+                            Write($"[{printerSN}]");
+                        }
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        @*<li role="separator" class="divider"></li>*@
+                        @if (hasPrinter)
+                        {
+                            <li><a asp-action="Unlock"><span class="glyphicon glyphicon-print"></span> 开机打印</a></li>
+                        }
+                        @*<li><a href="#"><span class="glyphicon glyphicon-barcode"></span> 扫码开机打印</a></li>*@
+                    </ul>
+                </li>
+            </ul>
+            @*<form class="navbar-form navbar-left">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search">
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>*@
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="glyphicon glyphicon-user"></i> @loginId
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#"><span class="glyphicon glyphicon-cog"></span> 设置</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Log Off</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
 
-<form action="/Result" method="post" class="form-horizontal">
-    <input type="hidden" name="Path" value="@Model.Path" />
-    <input type="hidden" name="Document" value="@Model.Document" />
-    <input type="hidden" name="UserID" value="@Model.UserID" />
-
+<form asp-controller="Home" role="form" asp-action="Result" method="post" enctype="multipart/form-data" class="form-horizontal">
     <div class="form-group">
-        <label class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.Document):</label>
-        <div class="input-group">
-            <p class="form-control-static">@Html.DisplayFor(m => m.Document)</p>
+        <label asp-for="Document" class="col-xs-3 col-sm-2 control-label">文件: </label>
+        <div class="col-xs-9 col-sm-10">
+            <input type="file" asp-for="Document" />
         </div>
     </div>
     <div class="form-group">
         <label for="Copies" class="col-xs-3 col-sm-2 control-label">@Html.DisplayNameFor(m => m.Copies): </label>
-        <div class="input-group quantity-wrapper">
+        <div class="input-group quantity-wrapper col-xs-6 col-sm-8">
 
-            <span class="input-group-addon input-group-addon-remove quantity-remove btn">
+            <span class="input-group-addon quantity-remove btn">
                 <span class="glyphicon glyphicon-minus"></span>
             </span>
 
             <input id="Copies" type="text" value="@Model.Copies" name="@nameof(@Model.Copies)" class="form-control quantity-count" placeholder="1">
 
-            <span class="input-group-addon input-group-addon-remove quantity-add btn">
+            <span class="input-group-addon quantity-add btn">
                 <span class="glyphicon glyphicon-plus"></span>
             </span>
 
@@ -82,59 +146,17 @@
                 var active = Model.PaperMode == val ? "active" : "";
                 var checked_ = Model.PaperMode == val ? "checked" : "";
                 <label class="btn btn-danger @active">
-                    <input type="radio" name="@nameof(Model.PaperMode)" id="Orientation" autocomplete="off" @checked_ value="@val">
+                    <input type="radio" name="@nameof(Model.PaperMode)" id="PaperMode" autocomplete="off" @checked_ value="@val">
                     @val.GetDisplayName()
                 </label>
             }
         </div>
     </div>
+
     <div class="form-group">
         <label class="col-xs-3 col-sm-2"></label>
-        <div class="">
-            <button type="submit" class="btn btn-danger">提交</button>
+        <div class="col-xs-6 col-sm-8">
+            <button type="submit" class="btn btn-danger btn-lg btn-block">上 传</button>
         </div>
     </div>
 </form>
-
-@section Scripts {
-    <script type="text/javascript">
-        $(document).ready(function () {
-
-            //Add
-            $(".quantity-add").click(function (e) {
-                var num = $(this).parent().find("input");
-                var count = num.val();
-                var newcount = parseInt(count) + 1;
-                num.val(newcount);
-            });
-
-            //Remove
-            $(".quantity-remove").click(function (e) {
-                var num = $(this).parent().find("input");
-                var count = num.val();
-                var newcount = parseInt(count) - 1;
-                num.val(newcount);
-            });
-
-
-            //Delete
-            $(".quantity-delete").click(function (e) {
-                //Vars
-                var count = 1;
-                var newcount = 0;
-
-                //Wert holen + Rechnen
-                var elemID = $(this).parent().attr("id");
-                var countField = $("#" + elemID + 'inp');
-                var count = $("#" + elemID + 'inp').val();
-                var newcount = parseInt(count) - 1;
-
-                //Neuen Wert setzen
-                //$('.item').html('');
-
-                var row = $(".row");
-                $(event.target).closest(row).html('');
-            });
-        })
-    </script>
-}

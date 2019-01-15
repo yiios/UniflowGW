@@ -1,0 +1,15 @@
+﻿
+@{
+    ViewData["Title"] = "TestAccessShare";
+}
+@using System.IO
+@using UNCAccessWithCredentials
+
+<h2>TestAccessShare</h2>
+
+<ul>
+    @foreach (var item in Directory.GetFileSystemEntries(@"\\10.11.226.200\hot"))
+    {
+    <li>@item</li>
+        }
+</ul>
