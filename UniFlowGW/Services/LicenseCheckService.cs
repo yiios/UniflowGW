@@ -12,7 +12,15 @@ namespace UniFlowGW.Services
         //LicenseCheckResult CheckResult { get; }
 
     }
+    public enum LicenseStatus
+    {
+        OK,
+        Checking,
+        NoValidLicenseKey,
+        QuotaExceed,
+    }
     public class LicenseCheckService
     {
+        
     }
 }
