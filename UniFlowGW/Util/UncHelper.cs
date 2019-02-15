@@ -15,15 +15,19 @@ namespace UniFlowGW.Util
         public UncHelper(IConfiguration configuration,
             ILogger<UncHelper> logger)
         {
+            logger.LogInformation("[UncHelper] NetUseWithCredentials");
             var targetPath = configuration["UniflowService:TaskTargetPath"];
-            if (targetPath.StartsWith(@"\\")) {
+            if (targetPath.StartsWith(@"\\"))
+            {
                 logger.LogInformation("Unc initialize: " + targetPath);
                 unc = new UNC();
                 var user = configuration["UniflowService:UncUser"];
                 var domain = configuration["UniflowService:UncDomain"];
                 var pwd = configuration["UniflowService:UncPassword"];
-                unc.NetUseWithCredentials(targetPath, user, domain, pwd);
+                var result = unc.NetUseWithCredentials(targetPath, user, domain, pwd);
+                logger.LogInformation("[UncHelper] NetUseWithCredentials Result:" + result);
             }
+
         }
     }
 }

@@ -21,10 +21,11 @@ namespace UniFlowGW.Controllers
 		public IConfiguration Configuration { get; }
 
 		public AdminController(IConfiguration configuration,
-			DatabaseContext ctx,
+			DatabaseContext ctx, IServiceProvider serviceProvider,
 			ILogger<AdminController> logger)
 		{
 			Configuration = configuration;
+            serviceProvider.GetService()
 			_ctx = ctx;
 			_logger = logger;
 		}

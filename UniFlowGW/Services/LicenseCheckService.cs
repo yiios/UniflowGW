@@ -15,12 +15,18 @@ namespace UniFlowGW.Services
     public enum LicenseStatus
     {
         OK,
-        Checking,
+        NotReady,
         NoValidLicenseKey,
         QuotaExceed,
     }
     public class LicenseCheckService
     {
-        
+        public LicenseStatus LicenseStatus { get; set; } = LicenseStatus.NotReady;
+
+        public LicenseCheckService()
+        {
+
+        }
+
     }
 }
