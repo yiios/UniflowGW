@@ -30,7 +30,8 @@ namespace UniFlowGW.Controllers
         public HomeController(IConfiguration configuration,
             DatabaseContext ctx,
             IBackgroundTaskQueue queue,
-            ILogger<HomeController> logger, UniflowController uniflow)
+            ILogger<HomeController> logger, UniflowController uniflow,
+            UncHelper uncHelper)
         {
             Configuration = configuration;
             _ctx = ctx;
@@ -444,16 +445,13 @@ namespace UniFlowGW.Controllers
             return (userId, type);
         }
 
-        [HttpGet("bind")]
+        [HttpGet]
         public IActionResult Bind(string backto)
         {
-            if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
-                return NotFound();
-
             return View();
         }
 
-        [HttpPost("bind")]
+        [HttpPost]
         public IActionResult Bind(UserViewModel model, string backto)
         {
             if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
@@ -497,23 +495,23 @@ namespace UniFlowGW.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost("unBind")]
-        public IActionResult UnBind()
+        [HttpPost]
+        public JsonResult UnBind()
         {
-            if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
-                return NotFound();
-
             var (externId, type) = HttpContext.Session.GetExternId();
             var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault<ExternBinding>();
+            var result = 0;
             if (null != findUser)
             {
                 _ctx.ExternBindings.Remove(findUser);
                 _logger.LogInformation(string.Format("Remove WechatUser:{0}-{1}", findUser.BindUserId, findUser.ExternalId));
+                _ctx.SaveChanges();
+                HttpContext.Session.Clear();
+                result = 1;
             }
-            _ctx.SaveChanges();
-            return RedirectToAction("Index");
-        }
 
+            return Json(new { Result = result });
+        }
 
 
         public IActionResult About()

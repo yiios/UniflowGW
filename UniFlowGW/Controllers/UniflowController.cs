@@ -59,25 +59,25 @@ namespace UniFlowGW.Controllers
 
 #if !DEBUG_DUMMY
     [Route("api/[controller]")]
-	[ApiController]
-	public class UniflowController : ControllerBase
-	{
-		readonly DatabaseContext _ctx;
-		readonly ILogger<UniflowController> _logger;
-		IConfiguration Configuration { get; }
+    [ApiController]
+    public class UniflowController : ControllerBase
+    {
+        readonly DatabaseContext _ctx;
+        readonly ILogger<UniflowController> _logger;
+        IConfiguration Configuration { get; }
 
-		public UniflowController(IConfiguration configuration,
-			DatabaseContext ctx,
-			ILogger<UniflowController> logger)
-		{
-			Configuration = configuration;
-			_ctx = ctx;
-			_logger = logger;
-		}
+        public UniflowController(IConfiguration configuration,
+            DatabaseContext ctx,
+            ILogger<UniflowController> logger)
+        {
+            Configuration = configuration;
+            _ctx = ctx;
+            _logger = logger;
+        }
 
         [HttpPost("checkuser")]
         public async Task<ActionResult<BindStatusResponse>> CheckUser(LoginPasswordRequest req)
-		{
+        {
             if (!ModelState.IsValid)
             {
                 var error = ModelState.First(m => m.Value.Errors.Count > 0);
@@ -93,9 +93,9 @@ namespace UniFlowGW.Controllers
             {
                 string baseurl = Configuration["UniflowService:Url"];
                 string key = Configuration["UniflowService:EncryptKey"];
-				string salt = EncryptUtil.CreateCryptographicallySecureGuid();
+                string salt = EncryptUtil.CreateCryptographicallySecureGuid();
 
-				string login = EncryptUtil.Encrypt(req.Login, key, salt);
+                string login = EncryptUtil.Encrypt(req.Login, key, salt);
                 string password = EncryptUtil.Encrypt(req.Password, key, salt);
 
                 string url = $"{baseurl}/WECHAT/CHECKUSER/{login}/{password}";
@@ -104,14 +104,14 @@ namespace UniFlowGW.Controllers
                 _logger.LogTrace("Response: " + result);
 
                 var xdoc = XElement.Parse(result);
-				var ns = xdoc.GetDefaultNamespace();
+                var ns = xdoc.GetDefaultNamespace();
                 var status = xdoc.Element(ns.GetName("Status")).Value;
                 var bindId = xdoc.Element(ns.GetName("UserRef")).Value;
-				var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
-				var message = status == "0" ? Error.Codes.OK.AsMessage() :
-					code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
+                var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
+                var message = status == "0" ? Error.Codes.OK.AsMessage() :
+                    code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
 
-				var response = new BindStatusResponse
+                var response = new BindStatusResponse
                 {
                     Code = code,
                     Message = message,
@@ -169,7 +169,7 @@ namespace UniFlowGW.Controllers
             try
             {
                 var bind = _ctx.ExternBindings
-					.Include(b => b.BindUser)
+                    .Include(b => b.BindUser)
                     .Where(b => b.Type == req.Type && b.ExternalId == req.ExternalId)
                     .FirstOrDefault();
                 var code = bind == null ? Error.Codes.BindNotFound : Error.Codes.OK;
@@ -233,8 +233,8 @@ namespace UniFlowGW.Controllers
                     _logger.LogTrace("Response: " + result);
 
                     var xdoc = XElement.Parse(result);
-					var ns = xdoc.GetDefaultNamespace();
-					var status = xdoc.Element(ns.GetName("Status")).Value;
+                    var ns = xdoc.GetDefaultNamespace();
+                    var status = xdoc.Element(ns.GetName("Status")).Value;
                     var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
                     var message = status == "0" ? Error.Codes.OK.AsMessage() :
                         code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
@@ -249,7 +249,7 @@ namespace UniFlowGW.Controllers
                     }
 
                     bind.BindTime = DateTime.Now;
-					bind.IsBinded = true;
+                    bind.IsBinded = true;
                     await _ctx.SaveChangesAsync();
                 }
 
@@ -325,8 +325,8 @@ namespace UniFlowGW.Controllers
                 _logger.LogTrace("Response: " + result);
 
                 var xdoc = XElement.Parse(result);
-				var ns = xdoc.GetDefaultNamespace();
-				var status = xdoc.Element(ns.GetName("Status")).Value;
+                var ns = xdoc.GetDefaultNamespace();
+                var status = xdoc.Element(ns.GetName("Status")).Value;
                 var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
                 var message = status == "0" ? Error.Codes.OK.AsMessage() :
                     code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
@@ -349,7 +349,73 @@ namespace UniFlowGW.Controllers
             }
         }
 
-	}
+        [HttpPost("externalunlock")]
+        public async Task<ActionResult<StatusResponse>> ExternalUnlock(ExternalIdUnlockRequest req)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.First(m => m.Value.Errors.Count > 0);
+                return new StatusResponse
+                {
+                    Code = Error.Codes.InvalidData.AsString(),
+                    Message = Error.Codes.InvalidData.AsMessage(
+                        error.Key, error.Value.Errors[0].ErrorMessage),
+                };
+            }
+
+            try
+            {
+                var bind = await _ctx.ExternBindings.FirstAsync(t => t.ExternalId == req.ExternalId && t.Type == req.Type);
+                if (bind == null || bind.BindTime == null)
+                {
+                    return new StatusResponse
+                    {
+                        Code = Error.Codes.BindNotFound.AsString(),
+                        Message = Error.Codes.BindNotFound.AsMessage(),
+                    };
+                }
+
+                string baseurl = Configuration["UniflowService:Url"];
+                string key = Configuration["UniflowService:EncryptKey"];
+
+                string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
+                string serial = req.Serial;
+
+                string url = $"{baseurl}/WECHAT/UNLOCK/{openid}/{serial}";
+                _logger.LogTrace("Get " + url);
+                var result = await RequestUtil.HttpGetAsync(url);
+                _logger.LogTrace("Response: " + result);
+
+                var xdoc = XElement.Parse(result);
+                var ns = xdoc.GetDefaultNamespace();
+                var status = xdoc.Element(ns.GetName("Status")).Value;
+                var code = xdoc.Element(ns.GetName("ErrorCode")).Value;
+                var message = status == "0" ? Error.Codes.OK.AsMessage() :
+                    code.AsCode().AsMessage(xdoc.Element(ns.GetName("ErrorDesc")).Value);
+
+                return new StatusResponse
+                {
+                    Code = code,
+                    Message = message,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "error");
+                return new StatusResponse
+                {
+                    Code = Error.Codes.Exception.AsString(),
+                    Message = Error.Codes.Exception.AsMessage(
+                        ex.Message),
+                };
+            }
+        }
+
+    }
+
+
+
+
 #endif
 #if DEBUG_DUMMY
     [Route("api/[controller]")]
@@ -609,6 +675,15 @@ namespace UniFlowGW.Controllers
     {
         [Required]
         public string BindId { get; set; }
+        [Required]
+        public string Serial { get; set; }
+    }
+    public class ExternalIdUnlockRequest
+    {
+        [Required]
+        public string ExternalId { get; set; }
+        [Required]
+        public string Type { get; set; }
         [Required]
         public string Serial { get; set; }
     }

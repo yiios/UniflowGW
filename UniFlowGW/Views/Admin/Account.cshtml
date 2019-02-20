@@ -1,11 +1,11 @@
-﻿@model IEnumerable<UniFlowGW.Models.PrintTask>
+﻿@model IEnumerable<UniFlowGW.Models.BindUser>
 
 @{
-    ViewData["Title"] = "打印记录";
+    ViewData["Title"] = "用户账户";
     Layout = "_LayoutAdmin";
 }
 
-<h2>打印记录</h2>
+<h2>用户账户</h2>
 
 @*<p>
         <a asp-action="Create">Create New</a>
@@ -15,7 +15,7 @@
 <form asp-method="get" class="form-inline">
     <div class="form-actions">
         <p>
-            查询用户 ID:
+            查询用户:
             <div class="input-group">
                 <input type="search" class="form-control" name="q" value="@ViewBag.Query" />
                 <span class="input-group-btn">
@@ -23,7 +23,7 @@
                 </span>
             </div>
             <span class="pull-right">
-                | <a asp-action="PrintRecord">全部数据</a>
+                | <a asp-action="Account">全部数据</a>
             </span>
         </p>
     </div>
@@ -33,43 +33,29 @@
     <thead>
         <tr>
             <th>
-                <a asp-action="PrintRecord"
-                   asp-route-s="@nameof(PrintTask.Time)"
+                <a asp-action="Account"
+                   asp-route-s="@nameof(BindUser.BindTime)"
                    asp-route-d="@ViewBag.NextDirectionTime"
                    asp-route-cq="@ViewBag.Query"
                    asp-route-p="@ViewBag.PageIndex">
-                    @Html.DisplayNameFor(model => model.Time)
+                    @Html.DisplayNameFor(model => model.BindTime)
                     @ViewBag.MarkTime
                 </a>
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Document)
-            </th>
-            <th>
-                <a asp-action="PrintRecord"
-                   asp-route-s="@nameof(PrintTask.UserID)"
+                <a asp-action="Account"
+                   asp-route-s="@nameof(BindUser.UserLogin)"
                    asp-route-d="@ViewBag.NextDirectionUserID"
                    asp-route-cq="@ViewBag.Query"
                    asp-route-p="@ViewBag.PageIndex">
-                    @Html.DisplayNameFor(model => model.UserID)
+                    @Html.DisplayNameFor(model => model.UserLogin)
                     @ViewBag.MarkUserID
                 </a>
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Detail)
+                绑定账号
             </th>
             <th>
-                <a asp-action="PrintRecord"
-                   asp-route-s="@nameof(PrintTask.Status)"
-                   asp-route-d="@ViewBag.NextDirectionStatus"
-                   asp-route-cq="@ViewBag.Query"
-                   asp-route-p="@ViewBag.PageIndex">
-                    @Html.DisplayNameFor(model => model.Status)
-                    @ViewBag.MarkStatus
-                </a>
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Message)
             </th>
             @*<th></th>*@
         </tr>
@@ -77,39 +63,52 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Time)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Document)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.UserID)
-                </td>
-                <td>
-                    @{
-                        var detail = item.PrintModel;
+            var rows = item.ExternBindings.Count;
+            if (rows == 0)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.BindTime)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.UserLogin)
+                    </td>
+                </tr>
+            }
+            else
+            {
+                for (int i = 0; i < rows; i++)
+                {
+                    if (i == 0)
+                    {
+                        <tr>
+                            <td rowspan="@rows">
+                                @Html.DisplayFor(modelItem => item.BindTime)
+                            </td>
+                            <td rowspan="@rows">
+                                @Html.DisplayFor(modelItem => item.UserLogin)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ExternBindings[i].ExternalId)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ExternBindings[i].Type)
+                            </td>
+                        </tr>
                     }
-
-                    @Html.DisplayNameFor(m => m.PrintModel.Copies): @detail.Copies |
-                    @Html.DisplayNameFor(m => m.PrintModel.ColorMode): @detail.ColorMode.GetDisplayName() |
-                    @Html.DisplayNameFor(m => m.PrintModel.PaperSize): @detail.PaperSize.GetDisplayName() |
-                    @Html.DisplayNameFor(m => m.PrintModel.Orientation): @detail.Orientation.GetDisplayName() |
-                    @Html.DisplayNameFor(m => m.PrintModel.PaperMode): @detail.PaperMode.GetDisplayName()
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Status)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Message)
-                </td>
-                @*<td>
-                        <a asp-action="Edit" asp-route-id="@item.PrintTaskId">Edit</a> |
-                        <a asp-action="Details" asp-route-id="@item.PrintTaskId">Details</a> |
-                        <a asp-action="Delete" asp-route-id="@item.PrintTaskId">Delete</a>
-                    </td>*@
-            </tr>
+                    else
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ExternBindings[i].ExternalId)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ExternBindings[i].Type)
+                            </td>
+                        </tr>
+                    }
+                }
+            }
         }
     </tbody>
 </table>
