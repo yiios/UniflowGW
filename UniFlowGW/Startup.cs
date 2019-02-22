@@ -43,19 +43,25 @@ namespace UniFlowGW
 			services.AddHostedService<QueuedHostedService>();
 			if (bool.TryParse(Configuration["WeChat:WxWorkIOT:Switch"], out bool wxWorkIOTSwitch) && wxWorkIOTSwitch)
 			{
-				services.AddSingleton<Client>();
+				services.AddTransient<Client>();
 				services.AddHostedService<WssHostedService>();
 			}
 
+            services.AddSingleton<SettingService>();
             services.AddSingleton<UncHelper>();
 
             services.AddDbContext<DatabaseContext>(options =>
 				options.UseSqlite(
 					Configuration.GetConnectionString("DefaultConnection")));
 
-			// Add scheduled tasks & scheduler
-			//services.AddSingleton<IScheduledTask, SomeOtherTask>();
-			services.AddScheduler((sender, args) =>
+            services.AddSingleton<LicenseCheckService>();
+
+            services.AddHostedService<LicenseCheckHostedService>();
+
+            // Add scheduled tasks & scheduler
+            services.AddSingleton<IScheduledTask, LicenseKeyCheckTask>();
+            services.AddSingleton<IScheduledTask, DeviceQuotaCheckTask>();
+            services.AddScheduler((sender, args) =>
 			{
 				Console.Write(args.Exception.Message);
 				args.SetObserved();

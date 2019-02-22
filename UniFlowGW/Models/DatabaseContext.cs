@@ -82,12 +82,20 @@ namespace UniFlowGW.Models
         public List<ExternBinding> ExternBindings { get; set; }
     }
 
+    public class Setting
+    {
+        public int Id { get; set; }
+        public string Key { get; set; }
+        public string Value { get; set; }
+    }
+
 	public class DatabaseContext : DbContext
 	{
 		public DbSet<PrintTask> PrintTasks { get; set; }
 		public DbSet<Admin> Admins { get; set; }
         public DbSet<ExternBinding> ExternBindings { get; set; }
         public DbSet<BindUser> BindUsers { get; set; }
+        public DbSet<Setting> Settings { get; set; }
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options)
 			: base(options)
@@ -105,6 +113,13 @@ namespace UniFlowGW.Models
                 nameof(ExternBinding.Type), nameof(ExternBinding.ExternalId)).IsUnique();
 
             builder.Entity<BindUser>().Property(b => b.UserLogin).IsRequired();
+
+            builder.Entity<Setting>().Property(s => s.Key).IsRequired();
+            builder.Entity<Setting>().Property(s => s.Value).IsRequired();
+
+            builder.Entity<Admin>().HasData(
+                new Admin { AdminId = 1, Login = "admin", PasswordHash = "F4E1B9EB0780D62BDB3B6193829F1721" }
+                );
         }
     }
 }

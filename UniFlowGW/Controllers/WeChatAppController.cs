@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using UniFlowGW.Models;
+using UniFlowGW.Services;
 using UniFlowGW.Util;
 
 namespace UniFlowGW.Controllers
@@ -20,27 +21,27 @@ namespace UniFlowGW.Controllers
 	{
 		readonly DatabaseContext _ctx;
 		readonly ILogger<WeChatAppController> _logger;
-		UniflowController _uniflow;
+        readonly SettingService settings;
+        UniflowController _uniflow;
 
-		public WeChatAppController(IConfiguration configuration,
+		public WeChatAppController(SettingService settings,
 			DatabaseContext ctx,
 			ILogger<WeChatAppController> logger,
 			UniflowController uniflow)
 		{
-			Configuration = configuration;
+			this.settings = settings;
 			_ctx = ctx;
 			_logger = logger;
 			_uniflow = uniflow;
 		}
-		public IConfiguration Configuration { get; }
 
 		[HttpGet("login")]
 		public async Task<ActionResult<StatusResponse>> Login(string code)
 		{
 			var url = string.Format(
-				Configuration["WxApp:UrlPattern"],
-				Configuration["WxApp:AppId"],
-				Configuration["WxApp:Secret"],
+				settings["WxApp:UrlPattern"],
+				settings["WxApp:AppId"],
+				settings["WxApp:Secret"],
 				code
 				);
 
@@ -159,7 +160,7 @@ namespace UniFlowGW.Controllers
 				};
 			}
 
-			string key = Configuration["UniflowService:EncryptKey"];
+			string key = settings["UniflowService:EncryptKey"];
 			try
 			{
 				data = EncryptUtil.Decrypt(key, data);

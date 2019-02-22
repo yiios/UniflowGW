@@ -54,4 +54,17 @@ namespace UniFlowGW.Controllers
 		public static bool IsNoLoginBind(this string bindId)
 			=> NoLoginBindIdValue == bindId;
     }
+
+    public static class AdminSessionKeys
+    {
+        public const string AdminLoginUser = nameof(AdminLoginUser);
+
+        public static void SetAdminLoginUser(this ISession session, string value)
+            => session.SetString(AdminLoginUser, value);
+        public static string GetAdminLoginUser(this ISession session)
+            => session.GetString(AdminLoginUser);
+
+        public static bool HasAdminLogin(this ISession session)
+            => !string.IsNullOrEmpty(session.GetString(AdminLoginUser));
+    }
 }

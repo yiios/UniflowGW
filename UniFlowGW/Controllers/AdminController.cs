@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,10 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using UniFlowGW.Models;
+using UniFlowGW.Services;
 using UniFlowGW.Util;
 using UniFlowGW.ViewModels;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace UniFlowGW.Controllers
 {
@@ -20,19 +23,24 @@ namespace UniFlowGW.Controllers
 
         readonly DatabaseContext _ctx;
         readonly ILogger<AdminController> _logger;
-        public IConfiguration Configuration { get; }
+        readonly SettingService settings;
 
-        public AdminController(IConfiguration configuration,
+        public AdminController(SettingService settings,
             DatabaseContext ctx, IServiceProvider serviceProvider,
             ILogger<AdminController> logger)
         {
-            Configuration = configuration;
+            this.settings = settings;
             _ctx = ctx;
             _logger = logger;
         }
 
+        [TempData]
+        public string StatusMessage { get; set; }
+
         public ActionResult Index()
         {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login");
             return View();
         }
 
@@ -49,112 +57,160 @@ namespace UniFlowGW.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                /*
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
+                var user = await _ctx.Admins.Where(t => t.Login == model.UserName).FirstOrDefaultAsync();
+                if (user == null)
                 {
-                    _logger.LogInformation("User logged in.");
-                    //return RedirectToLocal(returnUrl);
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "用户名或密码不正确.");
                     return View(model);
                 }
-                */
+                string salt = settings["Security:Salt"];
+                string encrypted = GetHashPassword(model.Password, salt);
+                if (!user.PasswordHash.Equals(encrypted))
+                {
+                    ModelState.AddModelError(string.Empty, "用户名或密码不正确.");
+                    return View(model);
+                }
+
+                HttpContext.Session.SetAdminLoginUser(user.Login);
+                _logger.LogInformation("登录成功！");
+
+                if (string.IsNullOrEmpty(returnUrl))
+                    return RedirectToAction("Index");
+                return Redirect(returnUrl);
             }
-
-            // If we got this far, something failed, redisplay form
-            return RedirectToAction("Index");
+            return View(model);
         }
-
 
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
 
         [HttpGet]
         public async Task<IActionResult> ChangePassword()
         {
-            /*
-            var user = await _userManager.GetUserAsync(User);
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("Settings") });
+
+
+            var login = HttpContext.Session.GetAdminLoginUser();
+            var user = await _ctx.Admins.Where(t => t.Login == login).FirstOrDefaultAsync();
             if (user == null)
             {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                throw new ApplicationException("用户异常！");
             }
-
-            var hasPassword = await _userManager.HasPasswordAsync(user);
-            if (!hasPassword)
-            {
-                return RedirectToAction(nameof(SetPassword));
-            }
-
-           
-            */
-            var model = new ChangePasswordViewModel { StatusMessage = "" };
+            var model = new ChangePasswordViewModel { StatusMessage = StatusMessage };
             return View(model);
+
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            /*
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("Settings") });
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var login = HttpContext.Session.GetAdminLoginUser();
+            var user = await _ctx.Admins.Where(t => t.Login == login).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                throw new ApplicationException("用户异常！");
+            }
+            string salt = settings["Security:Salt"];
+            string encrypted = GetHashPassword(model.OldPassword, salt);
+            if (!user.PasswordHash.Equals(encrypted))
+            {
+                ModelState.AddModelError(string.Empty, "用户名原密码不正确.");
+                return View(model);
+            }
+            if (!model.NewPassword.Equals(model.ConfirmPassword))
+            {
+                ModelState.AddModelError(string.Empty, "确认密码不正确.");
+                return View(model);
+            }
+            string newEncryptedPwd = GetHashPassword(model.NewPassword, salt);
+            user.PasswordHash = newEncryptedPwd;
+            await _ctx.SaveChangesAsync();
+
+            _logger.LogInformation("密码修改成功");
+            StatusMessage = "密码修改成功！";
+
+            return RedirectToAction(nameof(ChangePassword));
+        }
+
+        private string GetHashPassword(string password, string salt)
+        {
+            string content = password + salt;
+            string encrypted;
+            using (var md5 = MD5.Create())
+            {
+                encrypted = BitConverter.ToString(
+                    md5.ComputeHash(Encoding.UTF8.GetBytes(content)))
+                    .Replace("-", string.Empty);
+            }
+            return encrypted;
+        }
+
+        public ActionResult Settings()
+        {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("Settings") });
+
+            var model = new SettingsViewModel();
+            model.LoadFrom(settings);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Settings(SettingsViewModel model)
+        {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("Settings") });
+
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+            model.StoreTo(settings);
 
-            var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-            if (!changePasswordResult.Succeeded)
-            {
-                AddErrors(changePasswordResult);
-                return View(model);
-            }
-
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            _logger.LogInformation("User changed their password successfully.");
-            StatusMessage = "Your password has been changed.";
-
-            return RedirectToAction(nameof(ChangePassword));
-
-          */
-            return View();
-        }
-
-        public ActionResult Settings()
-        {
             return View();
         }
 
         public ActionResult LicenseState()
         {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("LicenseState") });
             return View();
         }
 
         public ActionResult PrintRecord(string s, string d, string q, string cq, int? p)
         {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("PrintRecord") });
+
             var sort = string.IsNullOrEmpty(s) ? nameof(PrintTask.Time) : s;
             var direction = string.IsNullOrEmpty(d) ?
                 (sort == nameof(PrintTask.Time) ? "D" : "A") : d;
             int pageIndex = p ?? 1;
             string query = cq;
             if (!string.IsNullOrEmpty(q))
+            {
                 pageIndex = 1;
-            else
                 query = q;
+            }
 
             ViewBag.Query = query;
             ViewBag.Sort = sort;
@@ -216,15 +272,19 @@ namespace UniFlowGW.Controllers
 
         public ActionResult Account(string s, string d, string q, string cq, int? p)
         {
+            if (!HttpContext.Session.HasAdminLogin())
+                return RedirectToAction("Login", new { returnUrl = Url.Action("Account") });
+
             var sort = string.IsNullOrEmpty(s) ? nameof(BindUser.BindTime) : s;
             var direction = string.IsNullOrEmpty(d) ?
                 (sort == nameof(BindUser.BindTime) ? "D" : "A") : d;
             int pageIndex = p ?? 1;
             string query = cq;
             if (!string.IsNullOrEmpty(q))
+            {
                 pageIndex = 1;
-            else
                 query = q;
+            }
 
             ViewBag.Query = query;
             ViewBag.Sort = sort;

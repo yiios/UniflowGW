@@ -12,6 +12,8 @@ namespace Licensing
         public long ID { get; set; }
         public string Key { get; set; }
         public int Type { get; set; }
+        public string Product { get; set; }
+        public string Comments { get; set; }
         public int Count { get; internal set; }
         public DateTime? IssueDate { get; set; }
         public DateTime? ExpireDate { get; set; }
@@ -50,6 +52,8 @@ namespace Licensing
     id integer PRIMARY KEY,
     key VARCHAR(25) collate nocase,
     type int,
+    product VARCHAR(128),
+    comments VARCHAR(512),
     count int default 1,
     issuedate date,
     expiredate date,
@@ -77,8 +81,22 @@ namespace Licensing
             }
         }
 
+        static string SqlSumCountByProduct =
+            "SELECT IFNULL(SUM(count),0) FROM license" +
+            " WHERE hardwareinfo = @HW AND product = @Product AND expiredate > DATETIME()";
+        public int SumCountOfHWByProduct(string hwinfo, string product)
+        {
+            using (var cmd = new SQLiteCommand(conn))
+            {
+                cmd.CommandText = SqlSumCountByProduct;
+                cmd.Parameters.Add("@HW", DbType.AnsiString).Value = hwinfo;
+                cmd.Parameters.Add("@Product", DbType.AnsiString).Value = product;
+                return (int)cmd.ExecuteScalar();
+            }
+        }
+
         static string SqlSelectByKeyCode =
-            "SELECT id, key, type, count, issuedate, expiredate, hardwareinfo" +
+            "SELECT id, key, type, count, issuedate, expiredate, hardwareinfo, product, comments" +
             " FROM license WHERE key = @Key";
         public List<LicenseRow> SelectByKey(string key)
         {
@@ -87,6 +105,25 @@ namespace Licensing
                 cmd.CommandText = SqlSelectByKeyCode;
                 cmd.Parameters.Add("@Key", System.Data.DbType.AnsiString)
                     .Value = key;
+                DataTable table = new DataTable();
+                using (var reader = cmd.ExecuteReader())
+                    table.Load(reader);
+                return ToList(table);
+            }
+        }
+
+        static string SqlSelectByKeyCodeAndProduct =
+            "SELECT id, key, type, count, issuedate, expiredate, hardwareinfo, product, comments" +
+            " FROM license WHERE key = @Key AND product = @Product";
+        public List<LicenseRow> SelectByKeyAndProduct(string key, string product)
+        {
+            using (var cmd = new SQLiteCommand(conn))
+            {
+                cmd.CommandText = SqlSelectByKeyCodeAndProduct;
+                cmd.Parameters.Add("@Key", DbType.AnsiString)
+                    .Value = key;
+                cmd.Parameters.Add("@Product", DbType.AnsiString)
+                    .Value = product;
                 DataTable table = new DataTable();
                 using (var reader = cmd.ExecuteReader())
                     table.Load(reader);
@@ -107,6 +144,8 @@ namespace Licensing
                     IssueDate = r[4] as DateTime?,
                     ExpireDate = r[5] as DateTime?,
                     HardwareInfo = r[6] as string,
+                    Product = r[7] as string,
+                    Comments = r[8] as string,
                 };
                 list.Add(lic);
             }

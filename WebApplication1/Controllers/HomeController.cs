@@ -16,7 +16,7 @@ namespace WebApplication1.Controllers
             return View();
 
             UserManager<IdentityUser> manager;
-            manager.CreateAsync(new IdentityUser("admin"))
+            manager.CreateAsync(new IdentityUser("admin"));
         }
 
         public IActionResult About()

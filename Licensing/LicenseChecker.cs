@@ -176,7 +176,9 @@ namespace Licensing
         private async Task<Tuple<bool, int>> CheckLicensesByServiceAsync(LicenseInfo lic)
         {
             log.Debug("CheckLicensesByServiceAsync;");
-            LicensingClient client = new LicensingClient()
+            LicensingClient client = new LicensingClient(
+                LicensingClient.EndpointConfiguration.BasicHttpBinding_ILicensing,
+                ServiceEndpoint)
             {
                 RsaPublicKey = RsaPublicKey,
                 Password = Password,
@@ -238,7 +240,7 @@ namespace Licensing
         {
             LicensingClient client = new LicensingClient(
                 LicensingClient.EndpointConfiguration.BasicHttpBinding_ILicensing,
-                "https://localhost:6008/Licensing.svc")
+                ServiceEndpoint)
             {
                 Password = Password,
                 RsaPublicKey = RsaPublicKey,

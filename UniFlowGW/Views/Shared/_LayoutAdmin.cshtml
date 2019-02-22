@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using UniFlowGW.Controllers;
+@{ 
+    var adminLogin = Context.Session.GetAdminLoginUser();
+}
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -52,7 +56,7 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li><a asp-area="" asp-controller="Admin" asp-action="Account"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
-                    <li><a asp-area="" asp-controller="Admin" asp-action="License">License管理</a></li>
+                    <li><a asp-area="" asp-controller="Admin" asp-action="LicenseState">License管理</a></li>
                     <li><a asp-area="" asp-controller="Admin" asp-action="PrintRecord"><span class="glyphicon glyphicon-print"></span> 打印历史</a></li>
                     <li><a asp-area="" asp-controller="Admin" asp-action="Settings"><i class="glyphicon glyphicon-cog"></i> 设置</a></li>
                 </ul>
@@ -60,16 +64,16 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <span class="glyphicon glyphicon-user"></span> Admin
+                            <span class="glyphicon glyphicon-user"></span> @adminLogin
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a href="#" type="submit"><span class="glyphicon glyphicon-edit"></span> 修改密码</a>
+                                <a asp-area="" asp-controller="Admin" asp-action="ChangePassword"><span class="glyphicon glyphicon-edit"></span> 修改密码</a>
                             </li>
                             <li role="separator" class="divider"></li>
                             <li>
-                                <a href="#" type="submit"><span class="glyphicon glyphicon-log-out"></span> Log out</a>
+                                <a asp-area="" asp-controller="Admin" asp-action="Logout"><span class="glyphicon glyphicon-log-out"></span> Log out</a>
                             </li>
                         </ul>
                     </li>

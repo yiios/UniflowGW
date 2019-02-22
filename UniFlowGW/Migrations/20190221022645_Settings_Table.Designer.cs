@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniFlowGW.Models;
 
 namespace UniFlowGW.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20190221022645_Settings_Table")]
+    partial class Settings_Table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,10 +30,6 @@ namespace UniFlowGW.Migrations
                     b.HasKey("AdminId");
 
                     b.ToTable("Admins");
-
-                    b.HasData(
-                        new { AdminId = 1, Login = "admin", PasswordHash = "F4E1B9EB0780D62BDB3B6193829F1721" }
-                    );
                 });
 
             modelBuilder.Entity("UniFlowGW.Models.BindUser", b =>

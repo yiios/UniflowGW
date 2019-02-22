@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using UniFlowGW.Models;
+using UniFlowGW.Services;
 using UniFlowGW.Util;
 
 namespace UniFlowGW.Controllers
@@ -64,13 +65,13 @@ namespace UniFlowGW.Controllers
     {
         readonly DatabaseContext _ctx;
         readonly ILogger<UniflowController> _logger;
-        IConfiguration Configuration { get; }
+        readonly SettingService settings;
 
-        public UniflowController(IConfiguration configuration,
+        public UniflowController(SettingService settings,
             DatabaseContext ctx,
             ILogger<UniflowController> logger)
         {
-            Configuration = configuration;
+            this.settings = settings;
             _ctx = ctx;
             _logger = logger;
         }
@@ -91,8 +92,8 @@ namespace UniFlowGW.Controllers
 
             try
             {
-                string baseurl = Configuration["UniflowService:Url"];
-                string key = Configuration["UniflowService:EncryptKey"];
+                string baseurl = settings["UniflowService:Url"];
+                string key = settings["UniflowService:EncryptKey"];
                 string salt = EncryptUtil.CreateCryptographicallySecureGuid();
 
                 string login = EncryptUtil.Encrypt(req.Login, key, salt);
@@ -222,8 +223,8 @@ namespace UniFlowGW.Controllers
 
                 if (!bind.IsBinded)
                 {
-                    string baseurl = Configuration["UniflowService:Url"];
-                    string key = Configuration["UniflowService:EncryptKey"];
+                    string baseurl = settings["UniflowService:Url"];
+                    string key = settings["UniflowService:EncryptKey"];
 
                     string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
 
@@ -313,8 +314,8 @@ namespace UniFlowGW.Controllers
                     };
                 }
 
-                string baseurl = Configuration["UniflowService:Url"];
-                string key = Configuration["UniflowService:EncryptKey"];
+                string baseurl = settings["UniflowService:Url"];
+                string key = settings["UniflowService:EncryptKey"];
 
                 string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
                 string serial = req.Serial;
@@ -375,8 +376,8 @@ namespace UniFlowGW.Controllers
                     };
                 }
 
-                string baseurl = Configuration["UniflowService:Url"];
-                string key = Configuration["UniflowService:EncryptKey"];
+                string baseurl = settings["UniflowService:Url"];
+                string key = settings["UniflowService:EncryptKey"];
 
                 string openid = EncryptUtil.Encrypt(bind.BindUserId, key);
                 string serial = req.Serial;

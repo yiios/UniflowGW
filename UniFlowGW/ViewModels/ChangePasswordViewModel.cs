@@ -8,20 +8,20 @@ namespace UniFlowGW.ViewModels
 {
     public class ChangePasswordViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "请输入当前密码")]
         [DataType(DataType.Password)]
-        [Display(Name = "Current password")]
+        [Display(Name = "当前密码")]
         public string OldPassword { get; set; }
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [Required(ErrorMessage = "请输入新密码")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "密码长度不能少于 6 个字符")]
         [DataType(DataType.Password)]
-        [Display(Name = "New password")]
+        [Display(Name = "新密码")]
         public string NewPassword { get; set; }
 
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [Display(Name = "确认密码")]
+        [Compare("NewPassword", ErrorMessage = "请再次输入相同的新密码")]
         public string ConfirmPassword { get; set; }
 
         public string StatusMessage { get; set; }

@@ -26,26 +26,30 @@ namespace UniFlowGW.Controllers
         readonly ILogger<HomeController> _logger;
         readonly IBackgroundTaskQueue queue;
         UniflowController _uniflow;
+        SettingService settings;
 
-        public HomeController(IConfiguration configuration,
+        public HomeController(
+            //IConfiguration configuration,
+            SettingService settings,
             DatabaseContext ctx,
             IBackgroundTaskQueue queue,
             ILogger<HomeController> logger, UniflowController uniflow,
             UncHelper uncHelper)
         {
-            Configuration = configuration;
+            //Configuration = configuration;
             _ctx = ctx;
             this.queue = queue;
+            this.settings = settings;
             _logger = logger;
             _uniflow = uniflow;
         }
-        public IConfiguration Configuration { get; }
+        //public IConfiguration Configuration { get; }
 
         public IActionResult Index()
         {
             var bindId = HttpContext.Session.GetBindId();
             _logger.LogInformation(string.Format("[HomeController] [Index] bindId:{0}", bindId));
-            var fileUploadSwitch = Configuration["ModuleSwitch:FileUpload"];
+            var fileUploadSwitch = settings["ModuleSwitch:FileUpload"];
             if (!fileUploadSwitch.Equals("On"))
             {
                 return View("Error", new ErrorViewModel { Message = "请扫描打印机二维码。" });
@@ -53,7 +57,7 @@ namespace UniFlowGW.Controllers
             if (string.IsNullOrEmpty(bindId))
             {
                 //目前只有龙信的打印服务不需要绑定LDAP帐号。
-                if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+                if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                     return View("Error", new ErrorViewModel { Message = "会话已过期，请重新进入。" });
 
                 return RedirectToAction("Login", new { backto = WebUtility.UrlEncode(Url.Action()) });
@@ -66,14 +70,14 @@ namespace UniFlowGW.Controllers
         {
             var bindId = HttpContext.Session.GetBindId();
             _logger.LogInformation(string.Format("[HomeController] [History] bindId:{0}", bindId));
-            var fileUploadSwitch = Configuration["ModuleSwitch:FileUpload"];
+            var fileUploadSwitch = settings["ModuleSwitch:FileUpload"];
             if (!fileUploadSwitch.Equals("On"))
             {
                 return View("Error", new ErrorViewModel { Message = "请扫描打印机二维码。" });
             }
             if (string.IsNullOrEmpty(bindId))
             {
-                if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+                if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                     return View("Error", new ErrorViewModel { Message = "会话已过期，请重新进入。" });
 
                 return RedirectToAction("Login", new { backto = WebUtility.UrlEncode(Url.Action()) });
@@ -89,7 +93,7 @@ namespace UniFlowGW.Controllers
             _logger.LogInformation(string.Format("[HomeController] [Result] bindId:{0}", bindId));
             if (string.IsNullOrEmpty(bindId))
             {
-                if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+                if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                     return View("Error", new ErrorViewModel { Message = "会话已过期，请重新进入。" });
 
                 return RedirectToAction("Login", new { backto = WebUtility.UrlEncode(Url.Action("Index")) });
@@ -104,9 +108,9 @@ namespace UniFlowGW.Controllers
             var document = model.Document.FileName;
             var ext = Path.GetExtension(document).ToLower();
 
-            var allowed = (Configuration["ConvertibleFileTypes"] + ";" +
-                Configuration["ImageFileTypes"] + ";" +
-                Configuration["DirectHandledFileTypes"]).ToLower().Split(';');
+            var allowed = (settings["ConvertibleFileTypes"] + ";" +
+                settings["ImageFileTypes"] + ";" +
+                settings["DirectHandledFileTypes"]).ToLower().Split(';');
 
             if (!allowed.Contains(ext.ToLower()))
                 return View("Error", new ErrorViewModel { Message = "Document type not supported." });
@@ -119,9 +123,9 @@ namespace UniFlowGW.Controllers
             var temp = Path.GetTempFileName();
             var tempdoc = uploadPath;
 
-            var convertExts = Configuration["ConvertibleFileTypes"].ToLower().Split(';');
-            var imageExts = Configuration["ImageFileTypes"].ToLower().Split(';');
-            var directExts = Configuration["DirectHandledFileTypes"].ToLower().Split(';');
+            var convertExts = settings["ConvertibleFileTypes"].ToLower().Split(';');
+            var imageExts = settings["ImageFileTypes"].ToLower().Split(';');
+            var directExts = settings["DirectHandledFileTypes"].ToLower().Split(';');
 
             var isDirect = directExts.Contains(ext);
             var isConvert = convertExts.Contains(ext);
@@ -210,19 +214,19 @@ namespace UniFlowGW.Controllers
         [HttpGet]
         public IActionResult Login(string backto)
         {
-            if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+            if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                 return NotFound();
 
             var ua = Request.Headers["User-Agent"].ToString();
             _logger.LogInformation(string.Format("[HomeController] [Login] userAgent:{0}, backto{1}", ua, backto));
 
-            var enable = bool.TryParse(Configuration["WeChat:Enable"], out var value) && value;
+            var enable = bool.TryParse(settings["WeChat:Enable"], out var value) && value;
             if (enable && Regex.IsMatch(ua, "MicroMessenger", RegexOptions.IgnoreCase)) // wechat
             {
                 var isWxwork = Regex.IsMatch(ua, "wxwork", RegexOptions.IgnoreCase);
                 var wxworkOauthUrl = string.Format(
-                    Configuration["WeChat:OAuth2UrlPattern"],
-                    isWxwork ? Configuration["WeChat:WxWork:AppId"] : Configuration["WeChat:Wx:AppId"],
+                    settings["WeChat:OAuth2UrlPattern"],
+                    isWxwork ? settings["WeChat:WxWork:AppId"] : settings["WeChat:Wx:AppId"],
                     WebUtility.UrlEncode(Url.Action("OAuth2Callback", "Home", new { backto }, Request.Scheme)) // calback
                                                                                                                // state
                     );
@@ -236,7 +240,7 @@ namespace UniFlowGW.Controllers
         [HttpPost]
         public IActionResult Login(UserViewModel model, string backto)
         {
-            if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+            if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                 return NotFound();
 
             var req = new LoginPasswordRequest() { Login = model.userName, Password = model.password };
@@ -279,7 +283,7 @@ namespace UniFlowGW.Controllers
             _logger.LogInformation("[HomeController] [Login] [QR] data:" + data);
             if (!string.IsNullOrEmpty(data))
             {
-                string key = Configuration["UniflowService:EncryptKey"];
+                string key = settings["UniflowService:EncryptKey"];
                 try
                 {
                     data = EncryptUtil.Decrypt(key, data);
@@ -315,7 +319,7 @@ namespace UniFlowGW.Controllers
             var bindId = HttpContext.Session.GetBindId();
             if (string.IsNullOrEmpty(bindId))
             {
-                if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+                if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                     return View("Error", new ErrorViewModel { Message = "会话已过期，请重新进入。" });
 
                 return RedirectToAction("Login", new { backto = WebUtility.UrlEncode(Url.Action("Unlock", new { data })) });
@@ -325,7 +329,7 @@ namespace UniFlowGW.Controllers
                 return View("Error", new ErrorViewModel { Message = "暂不支持打印机扫码开机。" });
             }
 
-            string key = Configuration["UniflowService:EncryptKey"];
+            string key = settings["UniflowService:EncryptKey"];
 
             var printerSN = HttpContext.Session.GetCurrentPrinterSN();
             if (!string.IsNullOrEmpty(data))
@@ -402,12 +406,13 @@ namespace UniFlowGW.Controllers
         {
             _logger.LogInformation("[HomeController] [Login] [WxCallback] code:" + code);
             string getAccessTokenURL = string.Format(
-                Configuration["WeChat:Wx:GetTokenUrlPattern"],
-                Configuration["WeChat:Wx:AppId"],
-                Configuration["WeChat:Wx:Secret"],
+                settings["WeChat:Wx:GetTokenUrlPattern"],
+                settings["WeChat:Wx:AppId"],
+                settings["WeChat:Wx:Secret"],
                 code);
 
             var resGetToken = RequestUtil.HttpGet(getAccessTokenURL);
+            _logger.LogInformation("[HomeController] [WxCallback] response: " + resGetToken);
             var model = JsonHelper.DeserializeJsonToObject<AccessTokenModel>(resGetToken);
 
             return (model.openid, "WeChatOpenId");
@@ -417,18 +422,19 @@ namespace UniFlowGW.Controllers
         {
             _logger.LogInformation("[HomeController] [Login] [WxWorkCallback] code:" + code);
             string getAccessTokenURL = string.Format(
-                Configuration["WeChat:WxWork:GetTokenUrlPattern"],
-                Configuration["WeChat:WxWork:AppId"],
-                Configuration["WeChat:WxWork:Secret"]);
+                settings["WeChat:WxWork:GetTokenUrlPattern"],
+                settings["WeChat:WxWork:AppId"],
+                settings["WeChat:WxWork:Secret"]);
 
             var resGetToken = RequestUtil.HttpGet(getAccessTokenURL);
             string accessToken = JsonHelper.DeserializeJsonToObject<AccessTokenModel>(resGetToken).access_token;
 
             string userinfoURL = string.Format(
-                Configuration["WeChat:WxWork:GetUserInfoUrlPattern"],
+                settings["WeChat:WxWork:GetUserInfoUrlPattern"],
                 accessToken,
                 code);
             var resUserInfo = RequestUtil.HttpGet(userinfoURL);
+            _logger.LogInformation("[HomeController] [WxWorkCallback] response: " + resUserInfo);
             var corpModel = JsonHelper.DeserializeJsonToObject<CorpModel>(resUserInfo);
 
             string userId = "guest";
@@ -442,6 +448,10 @@ namespace UniFlowGW.Controllers
                 userId = corpModel.OpenId;
                 type = "WxWorkOpenID";
             }
+            else
+            {
+                throw new Exception("oAuth认证错误，请稍后再试！");
+            }
             return (userId, type);
         }
 
@@ -454,7 +464,7 @@ namespace UniFlowGW.Controllers
         [HttpPost]
         public IActionResult Bind(UserViewModel model, string backto)
         {
-            if (bool.TryParse(Configuration["NoLogin"], out bool noLogin) && noLogin)
+            if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                 return NotFound();
 
             var (externId, type) = HttpContext.Session.GetExternId();
@@ -495,8 +505,7 @@ namespace UniFlowGW.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
-        public JsonResult UnBind()
+        public IActionResult UnBind()
         {
             var (externId, type) = HttpContext.Session.GetExternId();
             var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault<ExternBinding>();
@@ -510,8 +519,26 @@ namespace UniFlowGW.Controllers
                 result = 1;
             }
 
-            return Json(new { Result = result });
+            return RedirectToAction("Login");
         }
+
+        //[HttpPost]
+        //public JsonResult UnBind()
+        //{
+        //    var (externId, type) = HttpContext.Session.GetExternId();
+        //    var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault<ExternBinding>();
+        //    var result = 0;
+        //    if (null != findUser)
+        //    {
+        //        _ctx.ExternBindings.Remove(findUser);
+        //        _logger.LogInformation(string.Format("Remove WechatUser:{0}-{1}", findUser.BindUserId, findUser.ExternalId));
+        //        _ctx.SaveChanges();
+        //        HttpContext.Session.Clear();
+        //        result = 1;
+        //    }
+
+        //    return Json(new { Result = result });
+        //}
 
 
         public IActionResult About()
@@ -539,10 +566,10 @@ namespace UniFlowGW.Controllers
             string account = "guest";
             try
             {
-                string validSignURL = string.Format(Configuration["LxValidSignURL"], HttpUtility.UrlEncode(sign));
+                string validSignURL = string.Format(settings["LxValidSignURL"], HttpUtility.UrlEncode(sign));
                 var headers = new Dictionary<string, string>()
                 {
-                    ["X-LONGCHAT-AppKey"] = Configuration["LxAppKey"],
+                    ["X-LONGCHAT-AppKey"] = settings["LxAppKey"],
                 };
                 var accountJson = RequestUtil.HttpGet(validSignURL, headers);
                 _logger.LogInformation("AccountJson:" + accountJson);
@@ -579,7 +606,7 @@ namespace UniFlowGW.Controllers
             var tempxml = tempdoc + ".xml";
             System.IO.File.WriteAllText(tempxml, ticket);
 
-            var targetPaths = Configuration["UniflowService:TaskTargetPath"];
+            var targetPaths = settings["UniflowService:TaskTargetPath"];
             foreach (var targetPath in targetPaths.Split(';'))
             {
                 var targetdoc = Path.Combine(targetPath.Trim(), outdoc);
@@ -644,7 +671,7 @@ namespace UniFlowGW.Controllers
             var landscapearg = landscape ? "-landscape" : "-portrait";
             var processInfo = new ProcessStartInfo
             {
-                FileName = Configuration["PdfConverter"],
+                FileName = settings["PdfConverter"],
                 Arguments = $"\"{source}\" \"{target}\" {landscapearg}",
                 CreateNoWindow = false,
             };
@@ -671,7 +698,7 @@ namespace UniFlowGW.Controllers
             {
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = Configuration["ImageConverter"],
+                    FileName = settings["ImageConverter"],
                     Arguments = $"\"{source}\" \"{target}\" jpg {(grayscale ? "grayscale" : "color")}",
                     CreateNoWindow = false,
                 };

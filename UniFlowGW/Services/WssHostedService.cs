@@ -18,17 +18,14 @@ namespace UniFlowGW.Services
         IServiceProvider serviceProvider;
         ILogger<WssHostedService> _logger;
         Client client;
-        IConfiguration configuration;
 
         public WssHostedService(IServiceProvider serviceProvider,
             Client client,
-            IConfiguration configuration,
             ILogger<WssHostedService> logger)
         {
 
             this.serviceProvider = serviceProvider;
             this.client = client;
-            this.configuration = configuration;
             this._logger = logger;
         }
 

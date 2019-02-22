@@ -31,23 +31,14 @@
                     <li><a asp-action="Index" asp-controller="Home"><span class="glyphicon glyphicon-cloud-upload"></span> 上传文档打印</a></li>
                     <li><a asp-action="History" asp-controller="Home"><span class="glyphicon glyphicon-time"></span> 打印历史</a></li>
                 }
-                <li class="dropdown active">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                <li class="active">
+                    <a href="#">
                         <span class="glyphicon glyphicon-print"></span> 打印机
                         @if (hasPrinter)
                         {
                             Write($"[{printerSN}]");
                         }
-                        <span class="caret"></span>
                     </a>
-                    <ul class="dropdown-menu">
-                        @*<li role="separator" class="divider"></li>*@
-                        @if (hasPrinter)
-                        {
-                            <li><a asp-action="Unlock"><span class="glyphicon glyphicon-print"></span> 开机打印</a></li>
-                        }
-                        @*<li><a href="#"><span class="glyphicon glyphicon-barcode"></span> 扫码开机打印</a></li>*@
-                    </ul>
                 </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -57,7 +48,7 @@
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="unbind" onclick="unbind();"><span class="glyphicon glyphicon-cog"></span> 解绑</a></li>
+                        <li><a asp-action="UnBind" class="unbind" onclick="return confirm('您确定要解绑吗?')"><span class="glyphicon  glyphicon-log-out"></span> 解绑</a></li>
                     </ul>
                 </li>
             </ul>

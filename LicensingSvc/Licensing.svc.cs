@@ -76,7 +76,7 @@ namespace Licensing
             log.Info("LicenseCheckRequest;License Key:" + request.Key);
             using (var db = new LicensingDb())
             {
-                var list = db.SelectByKey(request.Key);
+                var list = db.SelectByKeyAndProduct(request.Key, request.Product);
                 if (list.Count == 0)
                     return new LicenseCheckResponse
                     {
@@ -123,7 +123,7 @@ namespace Licensing
                         Message = "License 过期。",
                     };
 
-                int total = db.SumCountOfHW(license.HardwareInfo);
+                int total = db.SumCountOfHWByProduct(license.HardwareInfo, request.Product);
 
                 return new LicenseCheckResponse
                 {

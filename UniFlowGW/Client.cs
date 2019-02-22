@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using UniFlowGW.Services;
 using UniFlowGW.ViewModels;
 using WebSocketSharp;
 
@@ -23,12 +24,13 @@ namespace UniFlowGW
         Timer timer = new Timer(30000);
         Dictionary<String, PrintJob> reqJobList = new Dictionary<String, PrintJob>();
         readonly ILogger<Client> _logger;
-        public IConfiguration Configuration { get; }
-        public Client(IConfiguration configuration, ILogger<Client> logger)
+        SettingService settings;
+
+        public Client(SettingService settings, ILogger<Client> logger)
         {
-            Configuration = configuration;
-            ws = new WebSocket(Configuration["WeChat:WxWorkIOT:WebSocketServer"]);
+            ws = new WebSocket(settings["WeChat:WxWorkIOT:WebSocketServer"]);
             this._logger = logger;
+            this.settings = settings;
             ws.OnOpen += (sender, e) => OnOpen(sender, e);
             ws.OnMessage += (sender, e) => OnMessage(sender, e);
             ws.OnError += (sender, e) => OnError(sender, e);
@@ -49,11 +51,11 @@ namespace UniFlowGW
 
         public void RegisterNetWork()
         {
-            var sn = Configuration["WeChat:WxWorkIOT:PrinterSN"].ToString();
+            var sn = settings["WeChat:WxWorkIOT:PrinterSN"].ToString();
             var timestamp = (Int32)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
             Random rnd = new Random();
             var nonce = rnd.Next(100000, 999999);
-            var secretNo = Configuration["WeChat:WxWorkIOT:Secret"];
+            var secretNo = settings["WeChat:WxWorkIOT:Secret"];
             var type = "register";
             var paramArray = new List<string> { sn, secretNo, timestamp.ToString(), nonce.ToString(), type };
             paramArray.Sort(StringComparer.Ordinal);
@@ -353,7 +355,7 @@ namespace UniFlowGW
             var tempxml = tmpfile + ".xml";
             System.IO.File.WriteAllText(tempxml, ticket);
 
-            var targetPaths = Configuration["UniflowService:TaskTargetPath"];
+            var targetPaths = settings["UniflowService:TaskTargetPath"];
             foreach (var targetPath in targetPaths.Split(';'))
             {
                 var targetdoc = Path.Combine(targetPath.Trim(), outdoc);
