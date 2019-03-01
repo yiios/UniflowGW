@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
@@ -10,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using UniFlowGW.Models;
 using UniFlowGW.Services;
 using UniFlowGW.ViewModels;
 using WebSocketSharp;
@@ -25,12 +27,17 @@ namespace UniFlowGW
         Dictionary<String, PrintJob> reqJobList = new Dictionary<String, PrintJob>();
         readonly ILogger<Client> _logger;
         SettingService settings;
+        IServiceScopeFactory scopeFactory;
 
-        public Client(SettingService settings, ILogger<Client> logger)
+        public Client(SettingService settings,
+            ILogger<Client> logger,
+            IServiceScopeFactory scopeFactory)
         {
             ws = new WebSocket(settings["WeChat:WxWorkIOT:WebSocketServer"]);
             this._logger = logger;
             this.settings = settings;
+            this.scopeFactory = scopeFactory;
+
             ws.OnOpen += (sender, e) => OnOpen(sender, e);
             ws.OnMessage += (sender, e) => OnMessage(sender, e);
             ws.OnError += (sender, e) => OnError(sender, e);
@@ -224,7 +231,36 @@ namespace UniFlowGW
                             stream.CopyTo(fileStream);
                         }
                     }
-                    MoveToOutput(userId, filePath, reqJobList[reqId]);
+
+                    using (var scope = scopeFactory.CreateScope())
+                    using (var ctx = scope.ServiceProvider.GetService<DatabaseContext>())
+                    {
+                        var model = ToPrintTaskDetail(filePath, reqJobList[reqId], reqId);
+                        var task = new PrintTask
+                        {
+                            PrintModel = model,
+                            Document = model.Document,
+                            Status = PrintTaskStatus.Processing,
+                            Time = DateTime.Now,
+                            UserID = userId,
+                        };
+                        try
+                        {
+                            MoveToOutput(model, userId, filePath);
+                            task.Status = PrintTaskStatus.Committed;
+                        }
+                        catch (Exception ex)
+                        {
+                            task.Status = PrintTaskStatus.Failed;
+                            task.Message = "Internal error";
+                            throw;
+                        }
+                        finally
+                        {
+                            ctx.PrintTasks.Add(task);
+                            ctx.SaveChanges();
+                        }
+                    }
 
                     ReportPrintFileStatus(new StatusReportRequestBody { jobid = jobId, status = 1 });
                 }
@@ -308,50 +344,18 @@ namespace UniFlowGW
             return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
         }
 
-        private void MoveToOutput(string uid, string tmpfile, PrintJob printJob)
+        private void MoveToOutput(PrintTaskDetail model, string uid, string tmpfile)
         {
-            string copies = "1";
-            var copiesSetting = printJob.setting_list.Where(t => t.key == "份数").FirstOrDefault();
-            if (copiesSetting != null && copiesSetting.value.Length > 0)
-            {
-                copies = copiesSetting.value[0];
-            }
-            string color = ColorMode.BW.ToString();
-            var colorSetting = printJob.setting_list.Where(t => t.key == "颜色").FirstOrDefault();
-            if (colorSetting != null && colorSetting.value.Length > 0 && colorSetting.value[0].Equals(ColorMode.Color.GetDisplayName()))
-            {
-                color = ColorMode.Color.ToString();
-            }
-
-            var paperSizeSetting = printJob.setting_list.Where(t => t.key == "纸型").FirstOrDefault();
-            int pageSize = (int)PaperSize.A4;
-            if (paperSizeSetting != null && paperSizeSetting.value.Length > 0 && paperSizeSetting.value[0] == PaperSize.A3.GetDisplayName())
-                pageSize = (int)PaperSize.A3;
-
-            var paperModeSetting = printJob.setting_list.Where(t => t.key == "模式").FirstOrDefault();
-            string paperMode = PaperMode.Simplex.ToString();
-            if (paperModeSetting != null && paperModeSetting.value.Length > 0)
-            {
-                if (paperModeSetting.value[0] == PaperMode.LongEdge.GetDisplayName())
-                {
-                    paperMode = PaperMode.LongEdge.ToString();
-                }
-                else if (paperModeSetting.value[0] == PaperMode.ShortEdge.GetDisplayName())
-                {
-                    paperMode = PaperMode.ShortEdge.ToString();
-                }
-            }
-
             Guid guid = Guid.NewGuid();
             var outdoc = guid.ToString() + Path.GetExtension(tmpfile);
             var ticket = Template.ticketPdf
                 .Replace("$USERID$", uid)
                 .Replace("$PATH$", outdoc)
-                .Replace("$FILENAME$", printJob.doc_name)
-                .Replace("$COPIES$", copies.ToString())
-                .Replace("$COLORMODE$", color)
-                .Replace("$PAPERSIZE$", pageSize.ToString())
-                .Replace("$DUPLEX$", paperMode); ;
+                .Replace("$FILENAME$", Path.GetFileName(model.Document))
+                .Replace("$COPIES$", model.Copies.ToString())
+                .Replace("$COLORMODE$", model.ColorMode.ToString())
+                .Replace("$PAPERSIZE$", ((int)model.PaperSize).ToString())
+                .Replace("$DUPLEX$", model.PaperMode.ToString());
             var tempxml = tmpfile + ".xml";
             System.IO.File.WriteAllText(tempxml, ticket);
 
@@ -366,6 +370,55 @@ namespace UniFlowGW
 
             System.IO.File.Delete(tmpfile);
             System.IO.File.Delete(tempxml);
+        }
+
+        private static PrintTaskDetail ToPrintTaskDetail(string tmpfile, PrintJob printJob, string reqId)
+        {
+            var copies = 1;
+            var copiesSetting = printJob.setting_list.Where(t => t.key == "份数").FirstOrDefault();
+            if (copiesSetting != null && copiesSetting.value.Length > 0)
+            {
+                int.TryParse(copiesSetting.value[0], out copies);
+            }
+
+            var color = ColorMode.BW;
+            var colorSetting = printJob.setting_list.Where(t => t.key == "颜色").FirstOrDefault();
+            if (colorSetting != null && colorSetting.value.Length > 0 && colorSetting.value[0].Equals(ColorMode.Color.GetDisplayName()))
+            {
+                color = ColorMode.Color;
+            }
+
+            var paperSizeSetting = printJob.setting_list.Where(t => t.key == "纸型").FirstOrDefault();
+            var pageSize = PaperSize.A4;
+            if (paperSizeSetting != null && paperSizeSetting.value.Length > 0 && paperSizeSetting.value[0] == PaperSize.A3.GetDisplayName())
+                pageSize = PaperSize.A3;
+
+            var paperModeSetting = printJob.setting_list.Where(t => t.key == "模式").FirstOrDefault();
+            var paperMode = PaperMode.Simplex;
+            if (paperModeSetting != null && paperModeSetting.value.Length > 0)
+            {
+                if (paperModeSetting.value[0] == PaperMode.LongEdge.GetDisplayName())
+                {
+                    paperMode = PaperMode.LongEdge;
+                }
+                else if (paperModeSetting.value[0] == PaperMode.ShortEdge.GetDisplayName())
+                {
+                    paperMode = PaperMode.ShortEdge;
+                }
+            }
+            var printModel = new PrintTaskDetail
+            {
+                Path = tmpfile,
+                RequestId = reqId,
+                Document = printJob.doc_name,
+                Copies = copies,
+                Orientation = Orientation.Landscape,
+                ColorMode = color,
+                PaperMode = paperMode,
+                PaperSize = pageSize,
+            };
+
+            return printModel;
         }
 
         #endregion

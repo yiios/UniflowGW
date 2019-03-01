@@ -38,7 +38,7 @@
                    asp-route-d="@ViewBag.NextDirectionTime"
                    asp-route-cq="@ViewBag.Query"
                    asp-route-p="@ViewBag.PageIndex">
-                    @Html.DisplayNameFor(model => model.BindTime)
+                   绑定时间
                     @ViewBag.MarkTime
                 </a>
             </th>
@@ -48,7 +48,7 @@
                    asp-route-d="@ViewBag.NextDirectionUserID"
                    asp-route-cq="@ViewBag.Query"
                    asp-route-p="@ViewBag.PageIndex">
-                    @Html.DisplayNameFor(model => model.UserLogin)
+                   用户名
                     @ViewBag.MarkUserID
                 </a>
             </th>
@@ -56,6 +56,7 @@
                 绑定账号
             </th>
             <th>
+                绑定类型
             </th>
             @*<th></th>*@
         </tr>
@@ -126,7 +127,7 @@
         }
         总记录: @ViewBag.Total
     </span>
-    <a asp-action="PrintRecord"
+    <a asp-action="Account"
        asp-route-s="@ViewBag.Sort"
        asp-route-d="@ViewBag.Direction"
        asp-route-cq="@ViewBag.Query"
@@ -134,7 +135,7 @@
        class="btn btn-default @prevDisabled">
         首页
     </a>
-    <a asp-action="PrintRecord"
+    <a asp-action="Account"
        asp-route-s="@ViewBag.Sort"
        asp-route-d="@ViewBag.Direction"
        asp-route-cq="@ViewBag.Query"
@@ -143,7 +144,7 @@
         上一页
     </a>
     @ViewBag.PageIndex / @ViewBag.PageCount
-    <a asp-action="PrintRecord"
+    <a asp-action="Account"
        asp-route-s="@ViewBag.Sort"
        asp-route-d="@ViewBag.Direction"
        asp-route-cq="@ViewBag.Query"
@@ -151,7 +152,7 @@
        class="btn btn-default @nextDisabled">
         下一页
     </a>
-    <a asp-action="PrintRecord"
+    <a asp-action="Account"
        asp-route-s="@ViewBag.Sort"
        asp-route-d="@ViewBag.Direction"
        asp-route-cq="@ViewBag.Query"

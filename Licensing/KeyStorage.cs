@@ -35,7 +35,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        return null;
                     }
                 },
                 Store = (data) =>
@@ -51,7 +51,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        //throw;
                     }
                 },
             };
@@ -79,7 +79,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        return null;
                     }
                 },
                 Store = (data) =>
@@ -97,7 +97,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        //throw;
                     }
                 },
             };
@@ -117,7 +117,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        return null;
                     }
                 },
                 Store = (data) =>
@@ -130,7 +130,7 @@ namespace Licensing
                     catch (Exception ex)
                     {
                         log.Error(ex.Message, ex);
-                        throw;
+                        //throw;
                     }
                 },
             };

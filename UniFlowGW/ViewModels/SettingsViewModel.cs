@@ -18,12 +18,12 @@ namespace UniFlowGW.ViewModels
         public string TempFileFolder { get; set; }
 
         [Required]
-        [Display(Name = "uniFLOW 服务器地址")]
+        [Display(Name = "uniFLOW REST 服务地址")]
         [SettingsKey(Key = SettingsKey.UniflowServiceURL)]
         public string UniflowServiceURL { get; set; }
 
         [Required]
-        [Display(Name = "uniFLOW REST 服务秘钥")]
+        [Display(Name = "uniFLOW REST 服务密钥")]
         [SettingsKey(Key = SettingsKey.UniflowServiceEncryptKey)]
         public string UniflowServiceEncryptKey { get; set; }
 
@@ -38,32 +38,32 @@ namespace UniFlowGW.ViewModels
         public string UniflowConnection { get; set; }
 
         [Required]
-        [Display(Name = "AppId")]
+        [Display(Name = "微信 AppId")]
         [SettingsKey(Key = SettingsKey.WeChatWxAppId)]
         public string WeChatWxAppId { get; set; }
 
         [Required]
-        [Display(Name = "Secret")]
+        [Display(Name = "微信 Secret")]
         [SettingsKey(Key = SettingsKey.WeChatWxSecret)]
         public string WeChatWxSecret { get; set; }
 
         [Required]
-        [Display(Name = "AppId")]
+        [Display(Name = "企业微信 AppId")]
         [SettingsKey(Key = SettingsKey.WxWorkAppId)]
         public string WxWorkAppId { get; set; }
 
         [Required]
-        [Display(Name = "Secret")]
+        [Display(Name = "企业微信 Secret")]
         [SettingsKey(Key = SettingsKey.WxWorkSecret)]
         public string WxWorkSecret { get; set; }
 
         [Required]
-        [Display(Name = "AgentId")]
+        [Display(Name = "企业微信 AgentId")]
         [SettingsKey(Key = SettingsKey.WxWorkAgentId)]
         public string WxWorkAgentId { get; set; }
 
         [Required]
-        [Display(Name = "虚拟打印机 PrinterSN")]
+        [Display(Name = "虚拟打印机序列表")]
         [SettingsKey(Key = SettingsKey.WxWorkIOTPrinterSN)]
         public string WxWorkIOTPrinterSN { get; set; }
 

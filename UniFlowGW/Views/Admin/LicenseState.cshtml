@@ -1,8 +1,83 @@
-﻿
+﻿@model IEnumerable<UniFlowGW.Models.LicenseKeyModel>
+
 @{
-    ViewData["Title"] = "LicenseState";
+    ViewData["Title"] = "授权码状态";
     Layout = "_LayoutAdmin";
 }
+@using UniFlowGW.Services;
+@inject LicenseCheckService licenseCheckService;
 
-<h2>LicenseState</h2>
+<h2>@ViewData["Title"]</h2>
 
+<div class="panel">
+    <div class="panel-heading">
+        <h4>授权检查</h4>
+    </div>
+    <div class="panel-body">
+        状态：@licenseCheckService.LicenseStatus
+        <partial name="_LicenseMessage" />
+        <hr />
+        打印机授权数量： @licenseCheckService.TotalPrinterQuota
+        <br />
+        打印机接入数量： @licenseCheckService.PrinterCount
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-heading">
+        <h4>授权码</h4>
+    </div>
+    <div class="panel-body">
+        <div class="btn-group">
+            <a asp-area="" asp-controller="Admin" asp-action="LicenseRegister" class="btn btn-primary float-md-right">注册授权码</a>
+        </div>
+
+        <table class="table table-striped table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th>
+
+                        授权码
+                    </th>
+                    <th>
+                        设备数量
+                    </th>
+                    <th>
+                        注册时间
+                    </th>
+                    <th>
+                        状态
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in licenseCheckService.LicenseKeys)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.KeyString)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Count)
+                        </td>
+                        <td>
+                            @Convert.ToDateTime(item.IssueTime).ToString("yyyy-MM-dd")
+                        </td>
+                        <td>
+                            @{ if (item.IsActive)
+                                {
+                                    Write("有效");
+                                }
+                                else
+                                {
+                                    Write("无效");
+                                }
+                            }
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

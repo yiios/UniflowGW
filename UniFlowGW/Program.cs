@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -15,10 +16,17 @@ namespace UniFlowGW
 	{
 		public static void Main(string[] args)
 		{
-			
-			CreateWebHostBuilder(args).Build().Run();
-			
-		}
+            var host = CreateWebHostBuilder(args).Build();
+
+            if (Debugger.IsAttached || args.Contains("--console"))
+            {
+                host.Run();
+            }
+            else
+            {
+                host.RunAsService();
+            }
+        }
 
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args)
 		{

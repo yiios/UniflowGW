@@ -1,0 +1,18 @@
+﻿@using UniFlowGW.Services;
+
+@inject LicenseCheckService licenseCheckService
+
+@if (licenseCheckService.LicenseStatus == LicenseStatus.QuotaExceed)
+{
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        打印机数量已经超过License所允许的数，请尽快购买新的License！
+    </div>
+}
+else if (licenseCheckService.LicenseStatus == LicenseStatus.NoValidLicenseKey)
+{
+
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        没有注册有效的License！
+    </div>
+}
+

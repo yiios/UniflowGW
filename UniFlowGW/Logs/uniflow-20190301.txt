@@ -1,0 +1,199 @@
+2019-03-01T11:21:51.9513936+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:52.0861561+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:52.1043006+08:00  [INF] Executed DbCommand ("5"ms) [Parameters=["@__key_0='?' (Size = 32)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.2466413+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.2923795+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.2961564+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 19)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.3002193+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.3040541+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.3073025+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 18)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.3113218+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.3146042+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.3179528+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 25)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.3223634+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.3257197+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.3288362+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.3339789+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.3374333+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.3401998+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 35)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:54.3429636+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:54.3458229+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:54.3486304+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 36)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:55.0186481+08:00  [INF] Queued Hosted Service is starting. (cb05eba7)
+2019-03-01T11:21:55.0480336+08:00  [INF] Queued Hosted Service is starting. (cb05eba7)
+2019-03-01T11:21:55.3744126+08:00  [DBG] Connected! (6e23e3d0)
+2019-03-01T11:21:55.3790131+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:55.3827112+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:55.3856272+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 26)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:55.3885749+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:55.3914280+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:55.3939001+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 23)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:55.5551700+08:00  [INF] [WebSocketClient] [RegisterNetWork] Json:{"body":{"device_signature":"741229cc170f7988f5cb47616b77ce71ed9f2f24","nonce":117804,"timestamp":1551410515,"sn":"VPCIB0001"},"cmd":"register","headers":{"req_id":"1f5d7e9f-27f7-45ae-a300-3294e706547f"}} (ba894084)
+2019-03-01T11:21:55.5684529+08:00  [INF] [WebSocketClient] [GetJobList] Json:{"body":{"userid":null,"status":0,"offset":0,"limit":0,"jobid_list":null},"cmd":"printer/get_job_list","headers":{"req_id":"3febf71d-d8e2-423e-9825-ce44c45ab357"}} (2b168e19)
+2019-03-01T11:21:55.5711120+08:00  [INF] Queued Hosted Service is stopping. (91f90176)
+2019-03-01T11:21:55.5757022+08:00  [DBG] Running Startup License Check. (3413799b)
+2019-03-01T11:21:55.5814743+08:00  [DBG] Checking license keys (88f73ca0)
+2019-03-01T11:21:55.6058083+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:55.6088506+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:55.6115142+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:55.6578447+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"1f5d7e9f-27f7-45ae-a300-3294e706547f"},"errcode":600001,"errmsg":"invalid device sn, hint: [1551410483_0_cb22b51bafbd61994fa41c7263b1e3dc]"} (d7fb8327)
+2019-03-01T11:21:55.6941724+08:00  [INF] [WebSocketClient] [TextMessage] data:{"errcode":600020,"errmsg":""} (3a611e5a)
+2019-03-01T11:21:56.0047417+08:00  [INF] Check Result: Unregistered - 未注册 License 或注册数据损坏。 (b60f516a)
+2019-03-01T11:21:56.0073364+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:56.0112154+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:56.0159266+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:56.0465036+08:00  [DBG] Check device quota (e476762c)
+2019-03-01T11:21:56.0534531+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:56.0569326+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:56.0613765+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 35)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:56.3726585+08:00  [DBG] Run license key check (9d49f8f9)
+2019-03-01T11:21:56.3748817+08:00  [DBG] Checking license keys (88f73ca0)
+2019-03-01T11:21:56.3783551+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:56.3817203+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:56.3846602+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:56.4446381+08:00  [INF] Check Result: Unregistered - 未注册 License 或注册数据损坏。 (b60f516a)
+2019-03-01T11:21:56.4477068+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:56.4508551+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:56.4537985+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:21:56.4776675+08:00  [DBG] Run device quota check (0fc00861)
+2019-03-01T11:21:56.4797957+08:00  [DBG] Check device quota (e476762c)
+2019-03-01T11:21:56.4824443+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:21:56.5057956+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:21:56.5092331+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 35)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:22:25.5747486+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"65149eef-6277-4400-9406-190a9cb04db2"}} (a2714e45)
+2019-03-01T11:22:25.6288007+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"65149eef-6277-4400-9406-190a9cb04db2"},"errcode":0,"errmsg":"ok"} (11c0824a)
+2019-03-01T11:22:55.5732642+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"d3c7e3fb-34a6-46c1-8a19-607e5b65a194"}} (cebda405)
+2019-03-01T11:22:55.6288462+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"d3c7e3fb-34a6-46c1-8a19-607e5b65a194"},"errcode":0,"errmsg":"ok"} (650687a5)
+2019-03-01T11:22:56.5301896+08:00  [DBG] Run license key check (9d49f8f9)
+2019-03-01T11:22:56.5325777+08:00  [DBG] Checking license keys (88f73ca0)
+2019-03-01T11:22:56.5355861+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:22:56.5395004+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:22:56.5424486+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:22:56.5669556+08:00  [INF] Check Result: Unregistered - 未注册 License 或注册数据损坏。 (b60f516a)
+2019-03-01T11:22:56.5700316+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:22:56.5734524+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:22:56.5757957+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:23:25.5771679+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"61d5f668-5d1d-4060-8521-abc0f74d7c6a"}} (106917da)
+2019-03-01T11:23:25.6258922+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"61d5f668-5d1d-4060-8521-abc0f74d7c6a"},"errcode":0,"errmsg":"ok"} (9648884a)
+2019-03-01T11:23:55.5769708+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"3748605a-44f2-424d-a796-27d79fd1cbf3"}} (b4f50c77)
+2019-03-01T11:23:55.6289003+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"3748605a-44f2-424d-a796-27d79fd1cbf3"},"errcode":0,"errmsg":"ok"} (1defc894)
+2019-03-01T11:23:56.6052199+08:00  [DBG] Run device quota check (0fc00861)
+2019-03-01T11:23:56.6072629+08:00  [DBG] Check device quota (e476762c)
+2019-03-01T11:23:56.6102606+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:23:56.6143138+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:23:56.6182364+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 35)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:24:25.5720111+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"0fe013db-080f-4831-a78d-0cb9271a4e85"}} (5e4366b0)
+2019-03-01T11:24:25.6218449+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"0fe013db-080f-4831-a78d-0cb9271a4e85"},"errcode":0,"errmsg":"ok"} (3e5f1125)
+2019-03-01T11:24:55.5741676+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"369561ee-ed72-4150-a88f-750f689675b5"}} (523e9186)
+2019-03-01T11:24:55.6279067+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"369561ee-ed72-4150-a88f-750f689675b5"},"errcode":0,"errmsg":"ok"} (b299a6a5)
+2019-03-01T11:24:56.6258287+08:00  [DBG] Run license key check (9d49f8f9)
+2019-03-01T11:24:56.6275725+08:00  [DBG] Checking license keys (88f73ca0)
+2019-03-01T11:24:56.6302261+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:24:56.6331745+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:24:56.6358168+08:00  [INF] Executed DbCommand ("1"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:24:56.6592739+08:00  [INF] Check Result: Unregistered - 未注册 License 或注册数据损坏。 (b60f516a)
+2019-03-01T11:24:56.6617393+08:00  [INF] Entity Framework Core "2.1.4-rtm-31024" initialized '"DatabaseContext"' using provider '"Microsoft.EntityFrameworkCore.Sqlite"' with options: "None" (9958f5bb)
+2019-03-01T11:24:56.6642932+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""PRAGMA foreign_keys=ON;" (0723d8ff)
+2019-03-01T11:24:56.6664431+08:00  [INF] Executed DbCommand ("0"ms) [Parameters=["@__key_0='?' (Size = 17)"], CommandType='Text', CommandTimeout='30']"
+""SELECT \"s\".\"Id\", \"s\".\"Key\", \"s\".\"Value\"
+FROM \"Settings\" AS \"s\"
+WHERE \"s\".\"Key\" = @__key_0
+LIMIT 1" (0723d8ff)
+2019-03-01T11:25:25.5745415+08:00  [INF] [WebSocketClient] [Ping] Json:{"cmd":"ping","headers":{"req_id":"96e8a0c3-6b18-488d-81f8-15c322d6d13c"}} (28be8753)
+2019-03-01T11:25:25.6237591+08:00  [INF] [WebSocketClient] [TextMessage] data:{"headers":{"req_id":"96e8a0c3-6b18-488d-81f8-15c322d6d13c"},"errcode":0,"errmsg":"ok"} (9168de9d)

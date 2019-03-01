@@ -71,6 +71,7 @@ namespace Licensing
         public string Password { get; set; }
         public string RsaPublicKey { get; set; }
         public KeyStorage KeyStorage { get; set; } = KeyStorage.File("key.dat");
+        public string Product { get; set; }
         uint maxCheckPostponeCount = 50;
         public uint MaxCheckPostponeCount
         {
@@ -188,7 +189,7 @@ namespace Licensing
                 .OrderByDescending(l => l.ExpireDate))
             {
                 var response = await client.CheckLicenseAsync(
-                    new LicenseCheckRequest { Hardware = hardware, Key = key.Key });
+                    new LicenseCheckRequest { Hardware = hardware, Key = key.Key, Product = Product });
                 if (response.State == LicenseCheckResponse.LicenseState.OK)
                 {
                     key.Amount = response.Amount;
@@ -204,7 +205,7 @@ namespace Licensing
             return Tuple.Create(false, 0);
         }
 
-        private LicenseInfo GetStoredLicenseInfo()
+        public LicenseInfo GetStoredLicenseInfo()
         {
             log.Debug("GetStoredLicenseInfo;");
             var data = KeyStorage.Load();
@@ -247,7 +248,7 @@ namespace Licensing
             };
 
             var response = await client.RegisterLicenseAsync(
-                new RegisterRequest { Hardware = hardware, Key = licenseKey });
+                new RegisterRequest { Hardware = hardware, Key = licenseKey, Product = Product });
 
             if (response.State == RegisterResponse.RegisterState.OK ||
                 response.State == RegisterResponse.RegisterState.OKExisted)

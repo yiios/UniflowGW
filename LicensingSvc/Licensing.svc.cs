@@ -140,7 +140,7 @@ namespace Licensing
             log.Info("DoRegisterLicense;key:" + request.Key);
             using (var db = new LicensingDb(true))
             {
-                var list = db.SelectByKey(request.Key);
+                var list = db.SelectByKeyAndProduct(request.Key, request.Product);
                 if (list.Count == 0)
                     return new RegisterResponse
                     {
@@ -167,7 +167,7 @@ namespace Licensing
                         db.Update(license);
                         db.Commit();
 
-                        int totalcount = db.SumCountOfHW(license.HardwareInfo);
+                        int totalcount = db.SumCountOfHWByProduct(license.HardwareInfo, request.Product);
 
                         return new RegisterResponse
                         {
@@ -214,7 +214,7 @@ namespace Licensing
                         Message = "License 过期。",
                     };
 
-                int total = db.SumCountOfHW(license.HardwareInfo);
+                int total = db.SumCountOfHWByProduct(license.HardwareInfo, request.Product);
 
                 return new RegisterResponse
                 {

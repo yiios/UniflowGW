@@ -96,8 +96,8 @@ namespace UniFlowGW.Controllers
                 string key = settings["UniflowService:EncryptKey"];
                 string salt = EncryptUtil.CreateCryptographicallySecureGuid();
 
-                string login = EncryptUtil.Encrypt(req.Login, key, salt);
-                string password = EncryptUtil.Encrypt(req.Password, key, salt);
+                string login = EncryptUtil.Encrypt(req.Login.Trim(), key, salt);
+                string password = EncryptUtil.Encrypt(req.Password.Trim(), key, salt);
 
                 string url = $"{baseurl}/WECHAT/CHECKUSER/{login}/{password}";
                 _logger.LogTrace("Get " + url);
@@ -131,12 +131,6 @@ namespace UniFlowGW.Controllers
                         BindUserId = bindId,
                         UserLogin = req.Login,
                     });
-                    await _ctx.SaveChangesAsync();
-                }
-                else if (bind.UserLogin != req.Login)
-                {
-                    _logger.LogWarning("Login changed: " + req.Login + " " + JsonHelper.SerializeObject(bind));
-                    bind.UserLogin = req.Login;
                     await _ctx.SaveChangesAsync();
                 }
                 return response;

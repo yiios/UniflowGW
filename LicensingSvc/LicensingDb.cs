@@ -77,7 +77,7 @@ namespace Licensing
             {
                 cmd.CommandText = SqlSumCount;
                 cmd.Parameters.Add("@HW", DbType.AnsiString).Value = hwinfo;
-                return (int)cmd.ExecuteScalar();
+                return int.Parse(cmd.ExecuteScalar().ToString());
             }
         }
 
@@ -91,7 +91,7 @@ namespace Licensing
                 cmd.CommandText = SqlSumCountByProduct;
                 cmd.Parameters.Add("@HW", DbType.AnsiString).Value = hwinfo;
                 cmd.Parameters.Add("@Product", DbType.AnsiString).Value = product;
-                return (int)cmd.ExecuteScalar();
+                return int.Parse(cmd.ExecuteScalar().ToString());
             }
         }
 

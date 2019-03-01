@@ -15,6 +15,7 @@ using UniFlowGW.Services;
 using Microsoft.Extensions.Logging;
 using UniFlowGW.Controllers;
 using UniFlowGW.Util;
+using Licensing;
 
 namespace UniFlowGW
 {
@@ -54,6 +55,21 @@ namespace UniFlowGW
 				options.UseSqlite(
 					Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddSingleton<LicenseChecker>(svcp =>
+            {
+                var settings = svcp.GetService<SettingService>();
+                return new LicenseChecker()
+                {
+                    RsaPublicKey = settings["Licensing:PublicKey"],
+                    Password = settings["Licensing:Password"],
+                    ServiceEndpoint = settings["Licensing:ServiceEndPoint"],
+                    KeyStorage = KeyStorage.Via(
+                        () => Convert.FromBase64String(settings["Licensing:KeyData"]),
+                        (bytes) => settings["Licensing:KeyData"] = Convert.ToBase64String(bytes)),
+                    Product = settings["Licensing:Product"],
+                };
+            });
+            services.AddSingleton<UniflowDbAccessService>();
             services.AddSingleton<LicenseCheckService>();
 
             services.AddHostedService<LicenseCheckHostedService>();

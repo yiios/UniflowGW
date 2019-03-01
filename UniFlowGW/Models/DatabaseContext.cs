@@ -22,7 +22,7 @@ namespace UniFlowGW.Models
 
         [Display(Name = "文档")]
 		public string Document { get; set; }
-        [Display(Name = "用户 ID")]
+        [Display(Name = "用户名")]
 		public string UserID { get; set; }
         [Display(Name = "详细信息")]
 		public string Detail { get; set; }

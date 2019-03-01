@@ -14,9 +14,9 @@ namespace ConsoleApp1
             "LcBV9kl24LfoFeeSKzI3UtB5yf80kLSE=</Modulus><Exponent>AQAB</Exponent></RSAKeyValu" +
             "e>",
                 Password = "DLOCR@2018",
-                ServiceEndpoint = "http://localhost:60504/Licensing.svc"
+                ServiceEndpoint = "http://0802-liyinan:802/Licensing.svc"
             };
-            var res = checker.RegisterLicense("AAAAABBBBBCCCCCDDDDDEEEEE");
+            var res = checker.RegisterLicense("1111122222333334444455555");
             Console.WriteLine($"{res.State}: {res.Message}");
         }
     }

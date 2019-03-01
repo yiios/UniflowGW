@@ -23,15 +23,18 @@ namespace UniFlowGW.Controllers
 
         readonly DatabaseContext _ctx;
         readonly ILogger<AdminController> _logger;
+        private readonly LicenseCheckService licenseCheckService;
         readonly SettingService settings;
 
         public AdminController(SettingService settings,
             DatabaseContext ctx, IServiceProvider serviceProvider,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            LicenseCheckService licenseCheckService)
         {
             this.settings = settings;
             _ctx = ctx;
             _logger = logger;
+            this.licenseCheckService = licenseCheckService;
         }
 
         [TempData]
@@ -61,14 +64,14 @@ namespace UniFlowGW.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = await _ctx.Admins.Where(t => t.Login == model.UserName).FirstOrDefaultAsync();
+                var user = await _ctx.Admins.Where(t => t.Login == model.UserName.Trim()).FirstOrDefaultAsync();
                 if (user == null)
                 {
                     ModelState.AddModelError(string.Empty, "用户名或密码不正确.");
                     return View(model);
                 }
                 string salt = settings["Security:Salt"];
-                string encrypted = GetHashPassword(model.Password, salt);
+                string encrypted = GetHashPassword(model.Password.Trim(), salt);
                 if (!user.PasswordHash.Equals(encrypted))
                 {
                     ModelState.AddModelError(string.Empty, "用户名或密码不正确.");
@@ -127,18 +130,18 @@ namespace UniFlowGW.Controllers
                 throw new ApplicationException("用户异常！");
             }
             string salt = settings["Security:Salt"];
-            string encrypted = GetHashPassword(model.OldPassword, salt);
+            string encrypted = GetHashPassword(model.OldPassword.Trim(), salt);
             if (!user.PasswordHash.Equals(encrypted))
             {
-                ModelState.AddModelError(string.Empty, "用户名原密码不正确.");
+                ModelState.AddModelError(string.Empty, "当前密码不正确.");
                 return View(model);
             }
-            if (!model.NewPassword.Equals(model.ConfirmPassword))
+            if (!model.NewPassword.Equals(model.ConfirmPassword.Trim()))
             {
                 ModelState.AddModelError(string.Empty, "确认密码不正确.");
                 return View(model);
             }
-            string newEncryptedPwd = GetHashPassword(model.NewPassword, salt);
+            string newEncryptedPwd = GetHashPassword(model.NewPassword.Trim(), salt);
             user.PasswordHash = newEncryptedPwd;
             await _ctx.SaveChangesAsync();
 
@@ -193,8 +196,50 @@ namespace UniFlowGW.Controllers
         {
             if (!HttpContext.Session.HasAdminLogin())
                 return RedirectToAction("Login", new { returnUrl = Url.Action("LicenseState") });
+
             return View();
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> LicenseRegister()
+        {
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LicenseRegister(string key)
+        {
+            var res = await licenseCheckService.RegisterLicenseKeyAsync(key);
+            if (res.State == Licensing.LicenseRegisterState.InvalidKey)
+            {
+                ModelState.AddModelError(string.Empty, "授权码无效！");
+                return View();
+            }
+            else if (res.State == Licensing.LicenseRegisterState.AlreadyUsed)
+            {
+                ModelState.AddModelError(string.Empty, "授权码已经被使用！");
+                return View();
+            }
+            else if (res.State == Licensing.LicenseRegisterState.AlreadyLicensed)
+            {
+                ModelState.AddModelError(string.Empty, "授权码已经被授权！");
+                return View();
+            }
+            else if (res.State == Licensing.LicenseRegisterState.ServiceError || res.State == Licensing.LicenseRegisterState.StateError)
+            {
+                ModelState.AddModelError(string.Empty, "服务端异常");
+                return View();
+            }
+            else if (res.State == Licensing.LicenseRegisterState.OK)
+            {
+                return RedirectToAction("LicenseState");
+            }
+            return View();
+        }
+
 
         public ActionResult PrintRecord(string s, string d, string q, string cq, int? p)
         {
@@ -307,13 +352,13 @@ namespace UniFlowGW.Controllers
                     break;
                 case nameof(BindUser.UserLogin) + "A":
                     querable = querable.OrderBy(t => t.UserLogin);
-                    ViewBag.MarkStatus = "▲";
-                    ViewBag.NextDirectionStatus = "D";
+                    ViewBag.MarkUserID = "▲";
+                    ViewBag.NextDirectionUserID = "D";
                     break;
                 case nameof(BindUser.UserLogin) + "D":
                     querable = querable.OrderByDescending(t => t.UserLogin);
-                    ViewBag.MarkStatus = "▼";
-                    ViewBag.NextDirectionStatus = "D";
+                    ViewBag.MarkUserID = "▼";
+                    ViewBag.NextDirectionUserID = "A";
                     break;
                 default: break;
             }

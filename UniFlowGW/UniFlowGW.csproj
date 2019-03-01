@@ -39,6 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Licensing\Licensing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="websocket-sharp">
       <HintPath>Lib\websocket-sharp.dll</HintPath>
     </Reference>

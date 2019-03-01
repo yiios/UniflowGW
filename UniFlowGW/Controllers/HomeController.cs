@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Net;
+using System.Globalization;
 
 namespace UniFlowGW.Controllers
 {
@@ -238,12 +239,18 @@ namespace UniFlowGW.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Login(UserViewModel model, string backto)
         {
             if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
                 return NotFound();
 
-            var req = new LoginPasswordRequest() { Login = model.userName, Password = model.password };
+
+            if (!ModelState.IsValid)
+            {
+                return View("Bind", model);
+            }
+            var req = new LoginPasswordRequest() { Login = model.UserName.Trim(), Password = model.Password.Trim() };
             var checkResult = _uniflow.CheckUser(req);
             if (checkResult.Result.Value.Code != "0")
             {
@@ -252,7 +259,7 @@ namespace UniFlowGW.Controllers
             }
 
             var bindId = checkResult.Result.Value.BindId;
-            var externId = model.userName;
+            var externId = model.UserName.Trim().ToLower();
             var type = "LDAPLogin";
             HttpContext.Session.SetExternId(externId, type);
 
@@ -271,7 +278,7 @@ namespace UniFlowGW.Controllers
             }
 
             HttpContext.Session.SetBindId(bindId);
-            HttpContext.Session.SetLdapLoginId(model.userName);
+            HttpContext.Session.SetLdapLoginId(model.UserName);
 
             if (!string.IsNullOrEmpty(backto))
                 return Redirect(WebUtility.UrlDecode(backto));
@@ -340,15 +347,21 @@ namespace UniFlowGW.Controllers
                 }
                 catch (Exception)
                 {
-                    return View("Error", new ErrorViewModel { Message = "二维码数据无效" });
+                    return View("Error", new ErrorViewModel { Message = "二维码数据无效。" });
                 }
                 var parts = data.Split('@');
                 if (parts.Length < 4 ||
                     !Uri.IsWellFormedUriString(parts[0], UriKind.Absolute) ||
                     string.IsNullOrEmpty(parts[1]))
                 {
-                    return View("Error", new ErrorViewModel { Message = "二维码数据无效" });
+                    return View("Error", new ErrorViewModel { Message = "二维码数据无效。" });
                 }
+                var datetime = DateTime.ParseExact(parts[2], "MMddyyyyHHmmss", CultureInfo.InvariantCulture);
+                if (datetime.AddMinutes(6).CompareTo(DateTime.Now) < 0)
+                {
+                    return View("Error", new ErrorViewModel { Message = "二维码已经过期。" });
+                }
+
                 printerSN = parts[1];
                 HttpContext.Session.SetCurrentPrinterSN(printerSN);
             }
@@ -462,6 +475,7 @@ namespace UniFlowGW.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Bind(UserViewModel model, string backto)
         {
             if (bool.TryParse(settings["NoLogin"], out bool noLogin) && noLogin)
@@ -472,8 +486,11 @@ namespace UniFlowGW.Controllers
             {
                 return RedirectToAction("Login");
             }
-
-            var req = new LoginPasswordRequest() { Login = model.userName, Password = model.password };
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var req = new LoginPasswordRequest() { Login = model.UserName.Trim(), Password = model.Password.Trim() };
             var checkResult = _uniflow.CheckUser(req);
             if (checkResult.Result.Value.Code != "0")
             {
@@ -498,7 +515,7 @@ namespace UniFlowGW.Controllers
             }
 
             HttpContext.Session.SetBindId(bindId);
-            HttpContext.Session.SetLdapLoginId(model.userName);
+            HttpContext.Session.SetLdapLoginId(model.UserName.Trim().ToLower());
 
             if (!string.IsNullOrEmpty(backto))
                 return Redirect(WebUtility.UrlDecode(backto));
@@ -508,38 +525,25 @@ namespace UniFlowGW.Controllers
         public IActionResult UnBind()
         {
             var (externId, type) = HttpContext.Session.GetExternId();
-            var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault<ExternBinding>();
-            var result = 0;
+            var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault();
             if (null != findUser)
             {
                 _ctx.ExternBindings.Remove(findUser);
                 _logger.LogInformation(string.Format("Remove WechatUser:{0}-{1}", findUser.BindUserId, findUser.ExternalId));
-                _ctx.SaveChanges();
-                HttpContext.Session.Clear();
-                result = 1;
             }
 
+            var bindId = HttpContext.Session.GetBindId();
+            var any = _ctx.ExternBindings.Any(s => s.BindUserId == bindId);
+            if (!any)
+            {
+                var user = _ctx.BindUsers.FirstOrDefault(u => u.BindUserId == bindId);
+                _ctx.BindUsers.Remove(user);
+                _logger.LogInformation(string.Format("Remove Account:{0}", findUser.BindUserId));
+            }
+
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
-
-        //[HttpPost]
-        //public JsonResult UnBind()
-        //{
-        //    var (externId, type) = HttpContext.Session.GetExternId();
-        //    var findUser = _ctx.ExternBindings.Where(s => s.ExternalId == externId && s.Type == type).SingleOrDefault<ExternBinding>();
-        //    var result = 0;
-        //    if (null != findUser)
-        //    {
-        //        _ctx.ExternBindings.Remove(findUser);
-        //        _logger.LogInformation(string.Format("Remove WechatUser:{0}-{1}", findUser.BindUserId, findUser.ExternalId));
-        //        _ctx.SaveChanges();
-        //        HttpContext.Session.Clear();
-        //        result = 1;
-        //    }
-
-        //    return Json(new { Result = result });
-        //}
-
 
         public IActionResult About()
         {
@@ -716,12 +720,6 @@ namespace UniFlowGW.Controllers
                 _logger.LogError(ex.Message, ex);
                 return false;
             }
-        }
-
-        public IActionResult TestAccessShare()
-        {
-
-            return View();
         }
     }
 }
